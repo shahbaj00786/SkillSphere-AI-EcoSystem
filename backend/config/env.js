@@ -1,4 +1,4 @@
-require('dotenv').config();
+import 'dotenv/config';
 
 const requiredEnvVars = [
   'PORT',
@@ -27,7 +27,7 @@ requiredEnvVars.forEach((key) => {
   }
 });
 
-module.exports = {
+const env = {
   port: process.env.PORT,
   nodeEnv: process.env.NODE_ENV,
   mongoUri: process.env.MONGO_URI,
@@ -55,3 +55,5 @@ module.exports = {
     model: process.env.OPENAI_MODEL,
   },
 };
+
+export default env;
