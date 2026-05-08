@@ -1,5 +1,5 @@
-import jwt from 'jsonwebtoken';
-import env from '../config/env.js';
+import jwt from "jsonwebtoken";
+import env from "../config/env.js";
 
 const generateAccessToken = (userId, role) => {
   return jwt.sign({ id: userId, role }, env.jwt.accessSecret, {
