@@ -3,7 +3,7 @@ const validate = (schema) => {
     const { error } = schema.validate(req.body, { abortEarly: false });
 
     if (error) {
-      const messages = error.details.map((err) => err.message).join(', ');
+      const messages = error.details.map((err) => err.message).join(", ");
       return res.json({
         success: false,
         message: messages,
