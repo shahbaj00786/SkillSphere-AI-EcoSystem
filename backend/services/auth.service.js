@@ -1,5 +1,5 @@
-import bcrypt from 'bcryptjs';
-import crypto from 'crypto';
+import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import {
   createUser,
   findUserByEmail,
@@ -8,25 +8,25 @@ import {
   findUserByResetToken,
   findUserByRefreshToken,
   updateUserById,
-} from '../repositories/user.repo.js';
+} from "../repositories/user.repo.js";
 import {
   generateAccessToken,
   generateRefreshToken,
   verifyRefreshToken,
-} from '../utils/jwt.utils.js';
+} from "../utils/jwt.utils.js";
 import {
   sendEmail,
   emailVerificationTemplate,
   passwordResetTemplate,
-} from '../utils/email.utils.js';
-import env from '../config/env.js';
+} from "../utils/email.utils.js";
+import env from "../config/env.js";
 
 // register
 const registerUser = async ({ name, email, password, role }) => {
   // check if user already exists
   const existingUser = await findUserByEmail(email);
   if (existingUser) {
-    return { success: false, message: 'User already exists' };
+    return { success: false, message: "User already exists" };
   }
 
   // hash password
@@ -34,7 +34,7 @@ const registerUser = async ({ name, email, password, role }) => {
   const hashedPassword = await bcrypt.hash(password, salt);
 
   // generate verification token
-  const verificationToken = crypto.randomBytes(32).toString('hex');
+  const verificationToken = crypto.randomBytes(32).toString("hex");
 
   // create user
   const user = await createUser({
@@ -49,18 +49,21 @@ const registerUser = async ({ name, email, password, role }) => {
   const verificationUrl = `${env.clientUrl}/verify-email?token=${verificationToken}`;
   await sendEmail({
     to: email,
-    subject: 'Verify Your SkillSphere Account',
+    subject: "Verify Your SkillSphere Account",
     body: emailVerificationTemplate(name, verificationUrl),
   });
 
-  return { success: true, message: 'Registration successful. Please verify your email.' };
+  return {
+    success: true,
+    message: "Registration successful. Please verify your email.",
+  };
 };
 
 // verify email
 const verifyEmail = async (token) => {
   const user = await findUserByVerificationToken(token);
   if (!user) {
-    return { success: false, message: 'Invalid or expired verification token' };
+    return { success: false, message: "Invalid or expired verification token" };
   }
 
   await updateUserById(user._id, {
@@ -68,7 +71,7 @@ const verifyEmail = async (token) => {
     verificationToken: null,
   });
 
-  return { success: true, message: 'Email verified successfully' };
+  return { success: true, message: "Email verified successfully" };
 };
 
 // login
@@ -76,23 +79,23 @@ const loginUser = async ({ email, password }) => {
   // check if user exists
   const user = await findUserByEmail(email);
   if (!user) {
-    return { success: false, message: 'Invalid credentials' };
+    return { success: false, message: "Invalid credentials" };
   }
 
   // check if account is active
   if (!user.isActive) {
-    return { success: false, message: 'Your account has been suspended' };
+    return { success: false, message: "Your account has been suspended" };
   }
 
   // check if email is verified
   if (!user.isVerified) {
-    return { success: false, message: 'Please verify your email first' };
+    return { success: false, message: "Please verify your email first" };
   }
 
   // check password
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
-    return { success: false, message: 'Invalid credentials' };
+    return { success: false, message: "Invalid credentials" };
   }
 
   // check 2FA
@@ -121,19 +124,19 @@ const loginUser = async ({ email, password }) => {
 // refresh token
 const refreshAccessToken = async (refreshToken) => {
   if (!refreshToken) {
-    return { success: false, message: 'Refresh token required' };
+    return { success: false, message: "Refresh token required" };
   }
 
   // verify token
   const decoded = verifyRefreshToken(refreshToken);
   if (!decoded) {
-    return { success: false, message: 'Invalid refresh token' };
+    return { success: false, message: "Invalid refresh token" };
   }
 
   // check if token matches db
   const user = await findUserByRefreshToken(refreshToken);
   if (!user) {
-    return { success: false, message: 'Invalid refresh token' };
+    return { success: false, message: "Invalid refresh token" };
   }
 
   // generate new tokens
@@ -143,24 +146,28 @@ const refreshAccessToken = async (refreshToken) => {
   // save new refresh token
   await updateUserById(user._id, { refreshToken: newRefreshToken });
 
-  return { success: true, accessToken: newAccessToken, refreshToken: newRefreshToken };
+  return {
+    success: true,
+    accessToken: newAccessToken,
+    refreshToken: newRefreshToken,
+  };
 };
 
 // logout
 const logoutUser = async (userId) => {
   await updateUserById(userId, { refreshToken: null });
-  return { success: true, message: 'Logged out successfully' };
+  return { success: true, message: "Logged out successfully" };
 };
 
 // forgot password
 const forgotPassword = async (email) => {
   const user = await findUserByEmail(email);
   if (!user) {
-    return { success: false, message: 'User not found' };
+    return { success: false, message: "User not found" };
   }
 
   // generate reset token
-  const resetToken = crypto.randomBytes(32).toString('hex');
+  const resetToken = crypto.randomBytes(32).toString("hex");
   const resetTokenExpiry = Date.now() + 60 * 60 * 1000; // 1 hour
 
   await updateUserById(user._id, { resetToken, resetTokenExpiry });
@@ -169,18 +176,18 @@ const forgotPassword = async (email) => {
   const resetUrl = `${env.clientUrl}/reset-password?token=${resetToken}`;
   await sendEmail({
     to: email,
-    subject: 'SkillSphere Password Reset',
+    subject: "SkillSphere Password Reset",
     body: passwordResetTemplate(user.name, resetUrl),
   });
 
-  return { success: true, message: 'Password reset link sent to your email' };
+  return { success: true, message: "Password reset link sent to your email" };
 };
 
 // reset password
 const resetPassword = async ({ token, password }) => {
   const user = await findUserByResetToken(token);
   if (!user) {
-    return { success: false, message: 'Invalid or expired reset token' };
+    return { success: false, message: "Invalid or expired reset token" };
   }
 
   // hash new password
@@ -193,14 +200,14 @@ const resetPassword = async ({ token, password }) => {
     resetTokenExpiry: null,
   });
 
-  return { success: true, message: 'Password reset successfully' };
+  return { success: true, message: "Password reset successfully" };
 };
 
 // get profile
 const getProfile = async (userId) => {
   const user = await findUserById(userId);
   if (!user) {
-    return { success: false, message: 'User not found' };
+    return { success: false, message: "User not found" };
   }
 
   user.password = undefined;
@@ -214,13 +221,13 @@ const getProfile = async (userId) => {
 const updateProfile = async (userId, updateData) => {
   const user = await updateUserById(userId, updateData);
   if (!user) {
-    return { success: false, message: 'User not found' };
+    return { success: false, message: "User not found" };
   }
 
   user.password = undefined;
   user.refreshToken = undefined;
 
-  return { success: true, message: 'Profile updated successfully', user };
+  return { success: true, message: "Profile updated successfully", user };
 };
 
 export {
