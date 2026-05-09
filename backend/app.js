@@ -4,6 +4,8 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import errorHandler from './middleware/errorHandler.middleware.js';
 import authRoutes from './routes/auth.routes.js';
+import userRoutes from './routes/user.routes.js';
+import freelancerRoutes from './routes/freelancer.routes.js';
 
 const app = express();
 
@@ -16,6 +18,8 @@ app.use(express.urlencoded({ extended: true }));
 
 // routes
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/freelancers', freelancerRoutes);
 
 // health check
 app.get('/', (req, res) => {
