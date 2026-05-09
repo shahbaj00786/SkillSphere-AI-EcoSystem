@@ -26,7 +26,7 @@ router.post('/register', validate(registerSchema), register);
 router.post('/login', validate(loginSchema), login);
 router.get('/verify-email', verifyEmailController);
 router.post('/forgot-password', validate(forgotPasswordSchema), forgotPasswordController);
-router.post('/reset-password', validate(resetPasswordSchema), resetPasswordController);
+router.post('/reset-password', resetPasswordController);
 router.post('/refresh-token', refreshToken);
 
 // protected routes — auth needed
