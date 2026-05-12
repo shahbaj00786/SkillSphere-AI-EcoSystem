@@ -76,7 +76,7 @@ const Login = () => {
               type='password'
               name='password'
               placeholder='Enter your password'
-              value={formData.email}
+              value={formData.password}
               onChange={handleChange}
               required
             />
