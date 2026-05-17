@@ -16,4 +16,4 @@ router.get('/conversations', auth, getUserConversationsController);
 router.put('/:messageId/read', auth, markAsReadController);
 router.delete('/:messageId', auth, deleteMessageController);
 
-export default router;
+export default router
