@@ -44,7 +44,8 @@ app.get('/', (req, res) => {
   res.json({ success: true, message: 'SkillSphere API is running' });
 });
 
-// error handler — must be last
+// error handler
 app.use(errorHandler);
 
 export default app;
+
