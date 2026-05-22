@@ -1,0 +1,274 @@
+.gig-detail {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: #f8f9fa;
+  min-height: 100vh;
+}
+
+.gig-detail-header {
+  margin-bottom: 2rem;
+}
+
+.gig-detail-header h1 {
+  font-size: 2.2rem;
+  color: #1a1a1a;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.gig-meta {
+  display: flex;
+  gap: 1rem;
+}
+
+.category,
+.status {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: #e7f3ff;
+  color: #0056b3;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.gig-detail-content {
+  display: grid;
+  grid-template-columns: 1fr 350px;
+  gap: 2rem;
+}
+
+.gig-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.gig-description-section,
+.gig-skills,
+.gig-milestones {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.gig-description-section h2,
+.gig-skills h3,
+.gig-milestones h3 {
+  margin-top: 0;
+  color: #1a1a1a;
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+}
+
+.gig-description-section p {
+  color: #555;
+  line-height: 1.8;
+  font-size: 1rem;
+}
+
+.skills-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.skill-badge {
+  display: inline-block;
+  padding: 0.5rem 1.2rem;
+  background: #f0f0f0;
+  color: #333;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.milestone {
+  padding: 1.2rem;
+  background: #f8f9fa;
+  border-left: 4px solid #007bff;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.milestone:last-child {
+  margin-bottom: 0;
+}
+
+.milestone-name {
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 0.5rem 0;
+}
+
+.milestone-amount {
+  color: #007bff;
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin: 0.5rem 0;
+}
+
+.milestone-date {
+  color: #999;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.gig-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.budget-card,
+.client-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.budget-card h3,
+.client-card h3 {
+  margin-top: 0;
+  color: #1a1a1a;
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+
+.budget-range {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #007bff;
+  margin: 0.5rem 0;
+}
+
+.duration {
+  color: #666;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.client-name {
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 0.5rem 0;
+}
+
+.client-email {
+  color: #666;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.btn-submit-proposal {
+  padding: 1rem;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+  width: 100%;
+}
+
+.btn-submit-proposal:hover {
+  background: #0056b3;
+  transform: scale(1.02);
+}
+
+.proposal-form {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.proposal-form h3 {
+  margin-top: 0;
+  color: #1a1a1a;
+}
+
+.proposal-form input,
+.proposal-form textarea {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: all 0.3s ease;
+}
+
+.proposal-form input:focus,
+.proposal-form textarea:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.proposal-form textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.btn-submit,
+.btn-cancel {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-submit {
+  background: #007bff;
+  color: white;
+}
+
+.btn-submit:hover {
+  background: #0056b3;
+}
+
+.btn-cancel {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.btn-cancel:hover {
+  background: #e0e0e0;
+}
+
+.loading,
+.error {
+  text-align: center;
+  padding: 3rem;
+  font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+  .gig-detail {
+    padding: 1rem;
+  }
+
+  .gig-detail-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .gig-detail-content {
+    grid-template-columns: 1fr;
+  }
+
+  .gig-main {
+    gap: 1.5rem;
+  }
+}
+
+
