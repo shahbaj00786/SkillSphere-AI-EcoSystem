@@ -1,3 +1,11 @@
+const apiResponse = (statusCode, data, message) => {
+  return {
+    success: statusCode >= 200 && statusCode < 300,
+    message,
+    data,
+  };
+};
+
 const successResponse = (res, message, data = {}, statusCode = 200) => {
   return res.status(statusCode).json({
     success: true,
@@ -13,4 +21,4 @@ const errorResponse = (res, message, statusCode = 400) => {
   });
 };
 
-export { successResponse, errorResponse };
+export { apiResponse, successResponse, errorResponse };

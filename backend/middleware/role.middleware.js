@@ -2,7 +2,7 @@
 const requireRole = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.role)) {
-      return res.json({
+      return res.status(403).json({
         success: false,
         message: "Access Denied: You do not have permission",
       });
