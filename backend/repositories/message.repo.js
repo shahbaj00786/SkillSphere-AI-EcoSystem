@@ -1,4 +1,5 @@
 import Message from '../models/Message.model.js';
+import mongoose from 'mongoose';
 
 const createMessage = async (data) => {
   const message = new Message(data);
@@ -26,10 +27,11 @@ const findConversation = async (senderId, receiverId, limit = 20, skip = 0) => {
 };
 
 const findUserConversations = async (userId) => {
+  const objectId = new mongoose.Types.ObjectId(userId);
   return await Message.aggregate([
     {
       $match: {
-        $or: [{ senderId: userId }, { receiverId: userId }],
+        $or: [{ senderId: objectId  }, { receiverId: objectId }],
       },
     },
     {

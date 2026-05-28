@@ -1,4 +1,5 @@
 import Payment from '../models/Payment.model.js';
+import mongoose from 'mongoose';
 
 const createPayment = async (data) => {
   const payment = new Payment(data);
@@ -52,7 +53,7 @@ const findPaymentsByStatus = async (status, limit = 10, skip = 0) => {
 
 const getPaymentStats = async (userId) => {
   return await Payment.aggregate([
-    { $match: { freelancerId: userId } },
+    { $match: { freelancerId: new mongoose.Types.ObjectId(userId) } },
     {
       $group: {
         _id: null,

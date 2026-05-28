@@ -12,7 +12,7 @@ const findProposalById = async (id) => {
 };
 
 const findProposalsByGigId = async (gigId) => {
-  return await Proposal.find({ gigId }).populate('freelancerId', 'name email avatar rating');
+  return await Proposal.find({ gigId }).populate('freelancerId', 'name email avatar');
 };
 
 const findProposalsByFreelancerId = async (freelancerId, limit = 10, skip = 0) => {

@@ -25,8 +25,9 @@ const findDisputesByStatus = async (status, limit = 10, skip = 0) => {
 };
 
 const findDisputesByUser = async (userId, limit = 10, skip = 0) => {
+  const objectId = new mongoose.Types.ObjectId(userId);
   return await Dispute.find({
-    $or: [{ raisedBy: userId }, { respondedBy: userId }],
+    $or: [{ raisedBy: objectId }, { respondedBy: objectId }],
   })
     .limit(limit)
     .skip(skip)

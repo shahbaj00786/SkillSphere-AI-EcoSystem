@@ -4,7 +4,7 @@ const clientSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "user",
+      ref: "User",
       required: true,
       unique: true,
     },
@@ -21,6 +21,6 @@ const clientSchema = new mongoose.Schema(
 );
 
 const clientModel =
-  mongoose.models.client || mongoose.model("client", clientSchema);
+  mongoose.models.Client || mongoose.model("Client", clientSchema);
 
 export default clientModel;

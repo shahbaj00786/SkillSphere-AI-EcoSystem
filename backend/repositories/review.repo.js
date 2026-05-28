@@ -1,4 +1,5 @@
 import Review from '../models/Review.model.js';
+import mongoose from 'mongoose';
 
 const createReview = async (data) => {
   const review = new Review(data);
@@ -36,7 +37,7 @@ const deleteReviewById = async (id) => {
 
 const getFreelancerRating = async (freelancerId) => {
   const result = await Review.aggregate([
-    { $match: { freelancerId } },
+    { $match: { freelancerId: new mongoose.Types.ObjectId(freelancerId) } },
     {
       $group: {
         _id: '$freelancerId',
