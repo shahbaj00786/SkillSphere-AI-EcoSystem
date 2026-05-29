@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
-import '../../styles/gigDetail.css';
+import '../styles/gigDetail.css';
+import Navbar from '../components/common/Navbar.jsx';
 
 const GigDetail = () => {
   const { gigId } = useParams();
@@ -43,7 +44,7 @@ const GigDetail = () => {
   const submitProposal = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('accessToken');
       await axios.post(
         `${import.meta.env.VITE_API_URL}/proposals`,
         {
@@ -68,6 +69,7 @@ const GigDetail = () => {
 
   return (
     <div className="gig-detail">
+      <Navbar/>
       <div className="gig-detail-header">
         <h1>{gig.title}</h1>
         <div className="gig-meta">

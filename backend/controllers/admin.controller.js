@@ -1,5 +1,5 @@
 import * as adminService from '../services/admin.service.js';
-import  apiResponse  from '../utils/apiResponse.utils.js';
+import  {apiResponse}  from '../utils/apiResponse.utils.js';
 
 const getAllUsersController = async (req, res, next) => {
   try {

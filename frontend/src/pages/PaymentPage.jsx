@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import '../../styles/payment.css';
+import '../styles/payment.css';
 
 const PaymentPage = () => {
   const [payments, setPayments] = useState([]);
@@ -17,7 +17,7 @@ const PaymentPage = () => {
     milestones: [],
   });
 
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('accessToken');
 
   useEffect(() => {
     const role = localStorage.getItem('userRole') || 'freelancer';

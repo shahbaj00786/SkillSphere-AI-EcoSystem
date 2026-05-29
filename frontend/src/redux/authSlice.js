@@ -23,6 +23,8 @@ const authSlice = createSlice({
       state.error = null;
       localStorage.setItem('accessToken', action.payload.accessToken);
       localStorage.setItem('refreshToken', action.payload.refreshToken);
+      localStorage.setItem('userId', action.payload.user._id);
+      localStorage.setItem('userRole', action.payload.user.role);
     },
     logoutSuccess: (state) => {
       state.user = null;
@@ -30,6 +32,8 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('userRole');
     },
     setUser: (state, action) => {
       state.user = action.payload;

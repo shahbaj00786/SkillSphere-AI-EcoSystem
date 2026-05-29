@@ -31,10 +31,16 @@ const Navbar = () => {
       </Link>
       <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
         <Link to='/dashboard' style={{ color: 'white' }}>Dashboard</Link>
-        <Link to='/profile' style={{ color: 'white' }}>Profile</Link>
-        <span style={{ color: 'white', fontSize: '14px' }}>
-          {user?.name || 'User'}
-        </span>
+        <Link to='/gigs' style={{ color: 'white' }}>Gigs</Link>
+        <Link to='/chat' style={{ color: 'white' }}>Messages</Link>
+        <Link to='/payments' style={{ color: 'white' }}>Payments</Link>
+        {user?.role === 'freelancer' && (
+          <Link to='/reviews' style={{ color: 'white' }}>Reviews</Link>
+        )}
+        {user?.role === 'admin' && (
+          <Link to='/admin' style={{ color: 'white' }}>Admin</Link>
+        )}
+        <Link to='/profile' style={{ color: 'white' }}>{user?.name || 'Profile'}</Link>
         <button
           onClick={handleLogout}
           style={{

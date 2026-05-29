@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import '../../styles/reviews.css';
+import '../styles/reviews.css';
 
 const ReviewsPage = () => {
   const [freelancerId, setFreelancerId] = useState(localStorage.getItem('userId'));
@@ -20,7 +20,7 @@ const ReviewsPage = () => {
     },
   });
 
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('accessToken');
 
   useEffect(() => {
     fetchReviews();

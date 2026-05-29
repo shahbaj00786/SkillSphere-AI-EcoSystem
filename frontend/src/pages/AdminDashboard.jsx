@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import '../../styles/adminDashboard.css';
+import '../styles/adminDashboard.css';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
@@ -11,7 +11,7 @@ const AdminDashboard = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [suspendReason, setSuspendReason] = useState('');
 
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('accessToken');
 
   useEffect(() => {
     fetchDashboardData();

@@ -1,5 +1,5 @@
 import * as gigService from '../services/gig.service.js';
-import  apiResponse  from '../utils/apiResponse.utils.js';
+import { apiResponse } from '../utils/apiResponse.utils.js';
 
 const createGigController = async (req, res, next) => {
   try {

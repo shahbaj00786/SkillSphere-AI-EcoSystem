@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import '../../styles/gigMarketplace.css';
+import '../styles/gigMarketplace.css';
+import Navbar from '../components/common/Navbar.jsx';
 
 const GigMarketplace = () => {
   const [gigs, setGigs] = useState([]);
@@ -53,6 +54,7 @@ const GigMarketplace = () => {
 
   return (
     <div className="gig-marketplace">
+      <Navbar />
       <div className="marketplace-header">
         <h1>Find Your Next Project</h1>
         <p>Browse available gigs from clients worldwide</p>

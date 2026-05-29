@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import io from 'socket.io-client';
-import '../../styles/chat.css';
+import '../styles/chat.css';
 
 const ChatPage = () => {
   const [conversations, setConversations] = useState([]);
@@ -15,7 +15,7 @@ const ChatPage = () => {
   const typingTimeoutRef = useRef(null);
 
   const userId = localStorage.getItem('userId');
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('accessToken');
 
   useEffect(() => {
     // Initialize Socket.IO connection
