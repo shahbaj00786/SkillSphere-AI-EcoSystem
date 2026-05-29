@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../styles/adminDashboard.css';
+import Navbar from '../components/common/Navbar.jsx';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
@@ -101,6 +102,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="admin-dashboard">
+      <Navbar/>
       <h1>Admin Dashboard</h1>
 
       {/* Tabs */}

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import io from 'socket.io-client';
 import '../styles/chat.css';
+import Navbar from '../components/common/Navbar.jsx';
 
 const ChatPage = () => {
   const [conversations, setConversations] = useState([]);
@@ -125,6 +126,7 @@ const ChatPage = () => {
 
   return (
     <div className="chat-container">
+      <Navbar/>
       <div className="chat-sidebar">
         <h2>Messages</h2>
         {loading ? (

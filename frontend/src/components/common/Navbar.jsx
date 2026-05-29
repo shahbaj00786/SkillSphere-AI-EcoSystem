@@ -2,6 +2,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate, Link } from 'react-router-dom'
 import { logoutSuccess } from '../../redux/authSlice.js'
 import authService from '../../services/authService.js'
+import NotificationBell from './NotificationBell.jsx'
 
 const Navbar = () => {
   const dispatch = useDispatch()
@@ -26,6 +27,7 @@ const Navbar = () => {
       justifyContent: 'space-between',
       alignItems: 'center'
     }}>
+       <NotificationBell />
       <Link to='/dashboard' style={{ color: 'white', fontSize: '20px', fontWeight: 'bold', textDecoration: 'none' }}>
         SkillSphere
       </Link>

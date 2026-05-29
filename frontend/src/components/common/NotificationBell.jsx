@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import io from 'socket.io-client';
-import '../styles/notificationBell.css';
+import '../../styles/notificationBell.css';
 
 const NotificationBell = () => {
   const [notifications, setNotifications] = useState([]);
@@ -12,7 +12,7 @@ const NotificationBell = () => {
   const dropdownRef = useRef(null);
 
   const userId = localStorage.getItem('userId');
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('accessToken');
 
   useEffect(() => {
     fetchNotifications();
@@ -48,7 +48,7 @@ const NotificationBell = () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/notifications?limit=10`,
+       `${import.meta.env.VITE_API_URL}/notifications?limit=10`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

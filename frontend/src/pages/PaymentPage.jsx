@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../styles/payment.css';
+import Navbar from '../components/common/Navbar.jsx';
 
 const PaymentPage = () => {
   const [payments, setPayments] = useState([]);
@@ -109,6 +110,7 @@ const PaymentPage = () => {
 
   return (
     <div className="payment-container">
+      <Navbar/>
       <div className="payment-header">
         <h1>Payments & Transactions</h1>
         {userRole === 'client' && (

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../styles/reviews.css';
+import Navbar from '../components/common/Navbar.jsx';
 
 const ReviewsPage = () => {
   const [freelancerId, setFreelancerId] = useState(localStorage.getItem('userId'));
@@ -112,6 +113,7 @@ const ReviewsPage = () => {
 
   return (
     <div className="reviews-container">
+      <Navbar/>
       <div className="reviews-header">
         <h1>Reviews & Ratings</h1>
         {rating && (

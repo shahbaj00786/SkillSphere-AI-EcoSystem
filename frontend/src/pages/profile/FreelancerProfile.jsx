@@ -17,9 +17,9 @@ const FreelancerProfile = () => {
   const fetchFreelancerData = async () => {
     try {
       const [profileRes, reviewsRes, ratingRes] = await Promise.all([
-        axios.get(`${import.meta.env.VITE_API_URL}/freelancer/${id}`),
-        axios.get(`${import.meta.env.VITE_API_URL}/reviews/freelancer/${id}`),
-        axios.get(`${import.meta.env.VITE_API_URL}/reviews/freelancer/${id}/rating`),
+        axios.get(`${import.meta.env.VITE_API_URL}/freelancers/${id}`),
+        axios.get(`${import.meta.env.VITE_API_URL}/reviews/freelancers/${id}`),
+        axios.get(`${import.meta.env.VITE_API_URL}/reviews/freelancers/${id}/rating`),
       ]);
       setFreelancer(profileRes.data.data);
       setReviews(reviewsRes.data.data?.reviews || []);
