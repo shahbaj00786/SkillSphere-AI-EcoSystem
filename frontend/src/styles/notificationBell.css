@@ -1,6 +1,7 @@
 .notification-bell {
   position: relative;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
 }
 
 .bell-button {
@@ -60,19 +61,21 @@
 
 .notification-dropdown {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 8px);
   right: 0;
-  width: 380px;
-  max-height: 500px;
+  width: 360px;
+  max-height: 480px;
   background: white;
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
-  margin-top: 0.5rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  z-index: 9999;        /* ← was 1000, now above everything */
   display: flex;
   flex-direction: column;
   border: 1px solid #e0e0e0;
   overflow: hidden;
+  /* CRITICAL: these two lines stop it from pushing navbar text */
+  transform: none;
+  left: auto;
 }
 
 .notification-header {

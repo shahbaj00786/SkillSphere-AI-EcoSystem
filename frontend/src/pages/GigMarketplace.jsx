@@ -53,8 +53,10 @@ const GigMarketplace = () => {
   };
 
   return (
+     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+        <Navbar />
     <div className="gig-marketplace">
-      <Navbar />
+      
       <div className="marketplace-header">
         <h1>Find Your Next Project</h1>
         <p>Browse available gigs from clients worldwide</p>
@@ -136,6 +138,7 @@ const GigMarketplace = () => {
           Next
         </button>
       </div>
+    </div>
     </div>
   );
 };

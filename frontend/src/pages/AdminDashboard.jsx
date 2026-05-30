@@ -101,6 +101,8 @@ const AdminDashboard = () => {
   }
 
   return (
+    <div>
+      <Navbar/>
     <div className="admin-dashboard">
       <Navbar/>
       <h1>Admin Dashboard</h1>
@@ -277,6 +279,7 @@ const AdminDashboard = () => {
           </div>
         </div>
       )}
+    </div>
     </div>
   );
 };

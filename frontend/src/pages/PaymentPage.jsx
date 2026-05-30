@@ -109,8 +109,9 @@ const PaymentPage = () => {
   };
 
   return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+        <Navbar />
     <div className="payment-container">
-      <Navbar/>
       <div className="payment-header">
         <h1>Payments & Transactions</h1>
         {userRole === 'client' && (
@@ -247,6 +248,7 @@ const PaymentPage = () => {
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 };

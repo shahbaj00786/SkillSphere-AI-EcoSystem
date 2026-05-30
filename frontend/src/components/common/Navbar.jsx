@@ -25,7 +25,10 @@ const Navbar = () => {
       padding: '12px 24px',
       display: 'flex',
       justifyContent: 'space-between',
-      alignItems: 'center'
+      alignItems: 'center',
+      position: 'relative', 
+      overflow: 'visible', 
+      zIndex: 100,  
     }}>
        <NotificationBell />
       <Link to='/dashboard' style={{ color: 'white', fontSize: '20px', fontWeight: 'bold', textDecoration: 'none' }}>
@@ -43,6 +46,8 @@ const Navbar = () => {
           <Link to='/admin' style={{ color: 'white' }}>Admin</Link>
         )}
         <Link to='/profile' style={{ color: 'white' }}>{user?.name || 'Profile'}</Link>
+        <Link to='/disputes' style={{ color: 'white' }}>Disputes</Link>
+        <Link to='/proposals' style={{ color: 'white' }}>Proposals</Link>
         <button
           onClick={handleLogout}
           style={{

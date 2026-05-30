@@ -68,8 +68,8 @@ const GigDetail = () => {
   if (!gig) return <div className="error">Gig not found</div>;
 
   return (
+    
     <div className="gig-detail">
-      <Navbar/>
       <div className="gig-detail-header">
         <h1>{gig.title}</h1>
         <div className="gig-meta">

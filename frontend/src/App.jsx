@@ -14,6 +14,8 @@ import PaymentPage from './pages/PaymentPage.jsx'
 import ReviewsPage from './pages/ReviewsPage.jsx'
 import AdminDashboard from './pages/AdminDashboard.jsx'
 import PrivateRoute from './components/common/PrivateRoute.jsx'
+import DisputePage from './pages/DisputePage.jsx'
+import ProposalsPage from './pages/ProposalsPage.jsx'
 
 function App() {
   return (
@@ -35,6 +37,8 @@ function App() {
       <Route path='/payments' element={<PrivateRoute><PaymentPage /></PrivateRoute>} />
       <Route path='/reviews' element={<PrivateRoute><ReviewsPage /></PrivateRoute>} />
       <Route path='/admin' element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
+      <Route path='/disputes' element={<PrivateRoute><DisputePage /></PrivateRoute>} />
+      <Route path='/proposals' element={<PrivateRoute><ProposalsPage /></PrivateRoute>} />
 
       {/* default */}
       <Route path='/' element={<Login />} />

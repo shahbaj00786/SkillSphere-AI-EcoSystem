@@ -125,8 +125,10 @@ const ChatPage = () => {
   };
 
   return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+    <Navbar />
     <div className="chat-container">
-      <Navbar/>
+      
       <div className="chat-sidebar">
         <h2>Messages</h2>
         {loading ? (
@@ -210,6 +212,7 @@ const ChatPage = () => {
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 };
