@@ -112,13 +112,6 @@ const AnalyticsPage = () => {
     { label: 'Rejected', value: proposalStats.rejected },
   ];
 
-  if (loading) return (
-    <div style={{ minHeight: '100vh', background: '#f9fafb' }}>
-      <Navbar />
-      <p style={{ textAlign: 'center', padding: '80px', color: '#9ca3af', fontSize: '16px' }}>Loading analytics...</p>
-    </div>
-  );
-
   return (
     <div style={{ minHeight: '100vh', background: '#f9fafb' }}>
       <Navbar />

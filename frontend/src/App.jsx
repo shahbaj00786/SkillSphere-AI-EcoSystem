@@ -16,6 +16,7 @@ import AdminDashboard from './pages/AdminDashboard.jsx'
 import PrivateRoute from './components/common/PrivateRoute.jsx'
 import DisputePage from './pages/DisputePage.jsx'
 import ProposalsPage from './pages/ProposalsPage.jsx'
+import AIMatchPage from './pages/AIMatchPage.jsx'
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
       <Route path='/admin' element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
       <Route path='/disputes' element={<PrivateRoute><DisputePage /></PrivateRoute>} />
       <Route path='/proposals' element={<PrivateRoute><ProposalsPage /></PrivateRoute>} />
+      <Route path='/ai-match' element={<PrivateRoute><AIMatchPage /></PrivateRoute>} />
 
       {/* default */}
       <Route path='/' element={<Login />} />
