@@ -3,49 +3,20 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/common/Navbar.jsx';
 
-// ── Skill similarity engine (runs in browser, no API key needed) ──
-// Uses Jaccard similarity on tokenized skill strings
-const tokenize = (str) =>
-  str.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(Boolean);
-
-const jaccardSimilarity = (setA, setB) => {
-  const a = new Set(setA);
-  const b = new Set(setB);
-  const intersection = [...a].filter(x => b.has(x)).length;
-  const union = new Set([...a, ...b]).size;
-  return union === 0 ? 0 : intersection / union;
-};
-
-const scoreGig = (gig, freelancerSkills) => {
-  const gigSkillTokens = (gig.requiredSkills || []).flatMap(tokenize);
-  const freelancerTokens = freelancerSkills.flatMap(tokenize);
-  const skillScore = jaccardSimilarity(gigSkillTokens, freelancerTokens);
-
-  // Boost for open gigs
-  const statusBoost = gig.status === 'open' ? 0.1 : 0;
-
-  // Boost based on proposal count (less competition = better)
-  const proposalCount = gig.proposals?.length || 0;
-  const competitionScore = proposalCount < 3 ? 0.1 : proposalCount < 7 ? 0.05 : 0;
-
-  return Math.min(1, skillScore + statusBoost + competitionScore);
-};
-
 const MatchBadge = ({ score }) => {
-  const pct = Math.round(score * 100);
-  const color = pct >= 70 ? '#10b981' : pct >= 40 ? '#f59e0b' : '#6b7280';
-  const label = pct >= 70 ? 'Great Match' : pct >= 40 ? 'Good Match' : 'Partial Match';
+  const color = score >= 70 ? '#10b981' : score >= 40 ? '#f59e0b' : '#6b7280';
+  const label = score >= 70 ? 'Great Match' : score >= 40 ? 'Good Match' : 'Partial Match';
   return (
-    <div style={{ textAlign: 'center' }}>
-      <div style={{ position: 'relative', width: '64px', height: '64px', margin: '0 auto 6px' }}>
-        <svg viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)', width: '64px', height: '64px' }}>
+    <div style={{ textAlign: 'center', flexShrink: 0 }}>
+      <div style={{ position: 'relative', width: '68px', height: '68px', margin: '0 auto 4px' }}>
+        <svg viewBox="0 0 36 36" style={{ transform: 'rotate(-90deg)', width: '68px', height: '68px' }}>
           <circle cx="18" cy="18" r="15.9" fill="none" stroke="#e5e7eb" strokeWidth="3" />
           <circle cx="18" cy="18" r="15.9" fill="none" stroke={color} strokeWidth="3"
-            strokeDasharray={`${pct} 100`} strokeLinecap="round" />
+            strokeDasharray={`${score} 100`} strokeLinecap="round" />
         </svg>
-        <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', fontSize: '12px', fontWeight: '800', color }}>{pct}%</span>
+        <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', fontSize: '13px', fontWeight: '800', color }}>{score}%</span>
       </div>
-      <span style={{ fontSize: '10px', fontWeight: '700', color, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>
+      <span style={{ fontSize: '10px', fontWeight: '700', color, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{label}</span>
     </div>
   );
 };
@@ -55,221 +26,264 @@ const AIMatchPage = () => {
   const token = localStorage.getItem('accessToken');
   const headers = { Authorization: `Bearer ${token}` };
 
-  const [profile, setProfile] = useState(null);
-  const [allGigs, setAllGigs] = useState([]);
-  const [matchedGigs, setMatchedGigs] = useState([]);
+  const [matches, setMatches] = useState([]);
+  const [summary, setSummary] = useState('');
+  const [trending, setTrending] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [skillInput, setSkillInput] = useState('');
-  const [customSkills, setCustomSkills] = useState([]);
-  const [sortBy, setSortBy] = useState('score'); // score | budget | recent
-  const [filterMin, setFilterMin] = useState('');
+  const [generating, setGenerating] = useState(null); // gigId being generated
+  const [generatedProposal, setGeneratedProposal] = useState(null);
+  const [error, setError] = useState('');
+  const [sortBy, setSortBy] = useState('score');
+  const [profileMissing, setProfileMissing] = useState(false);
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchMatches(); fetchTrending(); }, []);
 
-  const fetchData = async () => {
+  const fetchMatches = async () => {
     setLoading(true);
+    setError('');
     try {
-      const [gigsRes, profileRes] = await Promise.allSettled([
-        axios.get(`${import.meta.env.VITE_API_URL}/gigs/all`, { headers }),
-        axios.get(`${import.meta.env.VITE_API_URL}/users/me`, { headers }),
-      ]);
-
-      let gigs = [];
-      if (gigsRes.status === 'fulfilled') {
-        const d = gigsRes.value.data.data;
-        gigs = Array.isArray(d) ? d : d?.gigs || [];
-        setAllGigs(gigs);
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/ai/match-gigs`, { headers });
+      const data = res.data.data;
+      setMatches(data.matches || []);
+      setSummary(data.summary || '');
+    } catch (err) {
+      if (err.response?.status === 404 || err.response?.data?.message?.includes('profile')) {
+        setProfileMissing(true);
+      } else {
+        setError(err.response?.data?.message || 'Failed to load AI matches. Please try again.');
       }
-
-      let skills = [];
-      if (profileRes.status === 'fulfilled') {
-        const roleData = profileRes.value.data.roleData;
-        setProfile(profileRes.value.data.user);
-        skills = (roleData?.skills || []).map(s => s.name);
-      }
-      setCustomSkills(skills);
-      runMatching(gigs, skills);
-    } catch (e) {
-      console.error(e);
     } finally {
       setLoading(false);
     }
   };
 
-  const runMatching = (gigs, skills) => {
-    if (!skills.length) { setMatchedGigs([]); return; }
-    const scored = gigs
-      .filter(g => g.status === 'open')
-      .map(g => ({ ...g, _matchScore: scoreGig(g, skills) }))
-      .filter(g => g._matchScore > 0)
-      .sort((a, b) => b._matchScore - a._matchScore);
-    setMatchedGigs(scored);
+  const fetchTrending = async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/ai/trending-skills`);
+      setTrending(res.data.data || []);
+    } catch (e) { console.error(e); }
   };
 
-  const addCustomSkill = () => {
-    const trimmed = skillInput.trim();
-    if (!trimmed || customSkills.includes(trimmed)) return;
-    const updated = [...customSkills, trimmed];
-    setCustomSkills(updated);
-    setSkillInput('');
-    runMatching(allGigs, updated);
+  const generateProposal = async (gigId) => {
+    setGenerating(gigId);
+    setGeneratedProposal(null);
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/ai/generate-proposal/${gigId}`, { headers });
+      setGeneratedProposal({ gigId, ...res.data.data });
+    } catch (err) {
+      alert('Failed to generate proposal. Please try again.');
+    } finally {
+      setGenerating(null);
+    }
   };
 
-  const removeSkill = (skill) => {
-    const updated = customSkills.filter(s => s !== skill);
-    setCustomSkills(updated);
-    runMatching(allGigs, updated);
-  };
-
-  const sortedFiltered = [...matchedGigs]
-    .filter(g => filterMin === '' || (g.budget?.min || 0) >= Number(filterMin))
-    .sort((a, b) => {
-      if (sortBy === 'score') return b._matchScore - a._matchScore;
-      if (sortBy === 'budget') return (b.budget?.max || 0) - (a.budget?.max || 0);
-      if (sortBy === 'recent') return new Date(b.createdAt) - new Date(a.createdAt);
-      return 0;
-    });
+  const sorted = [...matches].sort((a, b) => {
+    if (sortBy === 'score') return b.score - a.score;
+    if (sortBy === 'budget') return (b.gig?.budget?.max || 0) - (a.gig?.budget?.max || 0);
+    return new Date(b.gig?.createdAt) - new Date(a.gig?.createdAt);
+  });
 
   return (
     <div style={{ minHeight: '100vh', background: '#f9fafb' }}>
       <Navbar />
 
-      <div style={{ maxWidth: '1000px', margin: '40px auto', padding: '0 20px' }}>
+      <div style={{ maxWidth: '1100px', margin: '40px auto', padding: '0 20px', display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px', alignItems: 'start' }}>
 
-        {/* Header */}
-        <div style={{ marginBottom: '28px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
-            <span style={{ fontSize: '28px' }}>🤖</span>
-            <h1 style={{ margin: 0, fontSize: '28px', color: '#111827' }}>AI Job Matching</h1>
+        {/* Main column */}
+        <div>
+          {/* Header */}
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+              <span style={{ fontSize: '28px' }}>🤖</span>
+              <h1 style={{ margin: 0, fontSize: '28px', color: '#111827' }}>AI Job Matching</h1>
+            </div>
+            <p style={{ margin: 0, color: '#6b7280' }}>Powered by Gemini AI — gigs ranked by your skill fit</p>
           </div>
-          <p style={{ margin: 0, color: '#6b7280' }}>
-            Gigs ranked by skill similarity score — your best matches appear first
-          </p>
+
+          {/* AI Summary */}
+          {summary && (
+            <div style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)', borderRadius: '14px', padding: '16px 20px', marginBottom: '20px', color: 'white' }}>
+              <p style={{ margin: '0 0 4px', fontSize: '12px', fontWeight: '700', opacity: 0.8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Gemini AI Assessment</p>
+              <p style={{ margin: 0, fontSize: '15px', lineHeight: '1.5' }}>💡 {summary}</p>
+            </div>
+          )}
+
+          {/* Profile missing state */}
+          {profileMissing && (
+            <div style={{ background: 'white', borderRadius: '14px', padding: '48px', textAlign: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }}>
+              <p style={{ fontSize: '40px', margin: '0 0 12px' }}>👤</p>
+              <h3 style={{ margin: '0 0 8px', color: '#111827' }}>Profile Setup Required</h3>
+              <p style={{ color: '#6b7280', margin: '0 0 20px' }}>You need to set up your freelancer profile with skills before AI matching can work.</p>
+              <button onClick={() => navigate('/freelancer-setup')}
+                style={{ background: '#4f46e5', color: 'white', border: 'none', padding: '12px 28px', borderRadius: '8px', cursor: 'pointer', fontWeight: '700' }}>
+                Set Up Profile →
+              </button>
+            </div>
+          )}
+
+          {/* Error state */}
+          {error && !profileMissing && (
+            <div style={{ background: '#fee2e2', color: '#991b1b', padding: '16px 20px', borderRadius: '12px', marginBottom: '20px' }}>
+              ❌ {error}
+              <button onClick={fetchMatches} style={{ marginLeft: '16px', background: '#991b1b', color: 'white', border: 'none', padding: '6px 14px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px' }}>
+                Retry
+              </button>
+            </div>
+          )}
+
+          {/* Sort control */}
+          {!loading && !profileMissing && matches.length > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <span style={{ color: '#6b7280', fontSize: '14px' }}><strong>{matches.length}</strong> AI-curated matches</span>
+              <select value={sortBy} onChange={e => setSortBy(e.target.value)}
+                style={{ padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '13px', background: 'white' }}>
+                <option value="score">Best Match First</option>
+                <option value="budget">Highest Budget</option>
+                <option value="recent">Most Recent</option>
+              </select>
+            </div>
+          )}
+
+          {/* Loading */}
+          {loading && (
+            <div style={{ background: 'white', borderRadius: '14px', padding: '60px', textAlign: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }}>
+              <p style={{ fontSize: '36px', margin: '0 0 12px' }}>🧠</p>
+              <p style={{ color: '#6b7280', fontSize: '15px', margin: 0 }}>Gemini AI is analyzing your profile against available gigs...</p>
+            </div>
+          )}
+
+          {/* No matches */}
+          {!loading && !profileMissing && !error && matches.length === 0 && (
+            <div style={{ background: 'white', borderRadius: '14px', padding: '60px', textAlign: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }}>
+              <p style={{ fontSize: '36px', margin: '0 0 12px' }}>😕</p>
+              <p style={{ color: '#6b7280' }}>No matching gigs found right now. Check back soon!</p>
+            </div>
+          )}
+
+          {/* Match cards */}
+          {sorted.map((m) => {
+            const gig = m.gig;
+            if (!gig) return null;
+            return (
+              <div key={gig._id} style={{
+                background: 'white', borderRadius: '14px', padding: '20px 22px',
+                marginBottom: '14px', boxShadow: '0 2px 8px rgba(0,0,0,0.07)',
+                borderLeft: `4px solid ${m.score >= 70 ? '#10b981' : m.score >= 40 ? '#f59e0b' : '#e5e7eb'}`,
+              }}>
+                <div style={{ display: 'flex', gap: '18px', alignItems: 'flex-start' }}>
+                  <MatchBadge score={m.score} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', marginBottom: '6px' }}>
+                      <h3 style={{ margin: 0, color: '#111827', fontSize: '16px', fontWeight: '700' }}>{gig.title}</h3>
+                      <span style={{ fontWeight: '800', color: '#10b981', fontSize: '15px' }}>
+                        ${gig.budget?.min}–${gig.budget?.max}
+                      </span>
+                    </div>
+
+                    <p style={{ margin: '0 0 8px', color: '#6b7280', fontSize: '12px' }}>
+                      {gig.category?.replace(/-/g, ' ')} · {gig.duration} · {new Date(gig.createdAt).toLocaleDateString()}
+                    </p>
+
+                    {/* AI reason */}
+                    <div style={{ background: '#f0fdf4', borderRadius: '8px', padding: '8px 12px', marginBottom: '10px', borderLeft: '3px solid #10b981' }}>
+                      <p style={{ margin: 0, fontSize: '13px', color: '#065f46' }}>
+                        <strong>Why you match:</strong> {m.reason}
+                      </p>
+                    </div>
+
+                    {m.skillGap && (
+                      <div style={{ background: '#fefce8', borderRadius: '8px', padding: '6px 12px', marginBottom: '10px', borderLeft: '3px solid #f59e0b' }}>
+                        <p style={{ margin: 0, fontSize: '12px', color: '#92400e' }}>
+                          <strong>Skill gap:</strong> {m.skillGap}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Required skills */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '14px' }}>
+                      {(gig.requiredSkills || []).map(skill => (
+                        <span key={skill} style={{ padding: '2px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '600', background: '#eef2ff', color: '#4f46e5' }}>
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Actions */}
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                      <button onClick={() => navigate(`/gig/${gig._id}`)}
+                        style={{ background: '#4f46e5', color: 'white', border: 'none', padding: '8px 18px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '13px' }}>
+                        View & Apply →
+                      </button>
+                      <button onClick={() => generateProposal(gig._id)} disabled={generating === gig._id}
+                        style={{ background: generating === gig._id ? '#d1d5db' : 'white', color: '#7c3aed', border: '1px solid #7c3aed', padding: '8px 18px', borderRadius: '8px', cursor: generating === gig._id ? 'not-allowed' : 'pointer', fontWeight: '600', fontSize: '13px' }}>
+                        {generating === gig._id ? '✨ Generating...' : '✨ AI Write Proposal'}
+                      </button>
+                    </div>
+
+                    {/* Generated proposal preview */}
+                    {generatedProposal?.gigId === gig._id && (
+                      <div style={{ marginTop: '16px', background: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: '10px', padding: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                          <p style={{ margin: 0, fontWeight: '700', color: '#5b21b6', fontSize: '14px' }}>✨ AI Generated Proposal</p>
+                          <button onClick={() => setGeneratedProposal(null)}
+                            style={{ background: 'none', border: 'none', color: '#9ca3af', cursor: 'pointer', fontSize: '16px' }}>✕</button>
+                        </div>
+                        <p style={{ margin: '0 0 6px', fontWeight: '700', color: '#374151', fontSize: '14px' }}>{generatedProposal.title}</p>
+                        <p style={{ margin: '0 0 12px', color: '#4b5563', fontSize: '13px', lineHeight: '1.6' }}>{generatedProposal.proposal}</p>
+                        <div style={{ display: 'flex', gap: '16px', marginBottom: '12px' }}>
+                          <span style={{ fontSize: '13px', color: '#374151' }}>💰 Suggested Bid: <strong>${generatedProposal.suggestedBid}</strong></span>
+                          <span style={{ fontSize: '13px', color: '#374151' }}>📅 Est. Days: <strong>{generatedProposal.estimatedDays}</strong></span>
+                        </div>
+                        <button onClick={() => navigate(`/gig/${gig._id}`, { state: { proposal: generatedProposal } })}
+                          style={{ background: '#7c3aed', color: 'white', border: 'none', padding: '8px 18px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '13px' }}>
+                          Use This Proposal →
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
-        {/* Skills Panel */}
-        <div style={{ background: 'white', borderRadius: '14px', padding: '20px 24px', boxShadow: '0 2px 8px rgba(0,0,0,0.07)', marginBottom: '24px' }}>
-          <p style={{ margin: '0 0 12px', fontWeight: '700', color: '#374151', fontSize: '14px' }}>
-            🎯 Your Skills — used to calculate match scores
-          </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '14px' }}>
-            {customSkills.length === 0 && (
-              <span style={{ color: '#9ca3af', fontSize: '13px' }}>No skills added yet. Add skills below to see matches.</span>
-            )}
-            {customSkills.map(s => (
-              <span key={s} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#eef2ff', color: '#4f46e5', padding: '4px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: '600' }}>
-                {s}
-                <button onClick={() => removeSkill(s)} style={{ background: 'none', border: 'none', color: '#818cf8', cursor: 'pointer', padding: 0, fontSize: '14px', lineHeight: 1 }}>×</button>
-              </span>
+        {/* Sidebar */}
+        <div>
+          {/* Trending skills */}
+          <div style={{ background: 'white', borderRadius: '14px', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.07)', marginBottom: '20px' }}>
+            <h3 style={{ margin: '0 0 16px', fontSize: '15px', color: '#111827' }}>🔥 Trending Skills</h3>
+            {trending.length === 0 ? (
+              <p style={{ color: '#9ca3af', fontSize: '13px' }}>Loading...</p>
+            ) : trending.map((t, i) => (
+              <div key={t.skill} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <span style={{ fontSize: '13px', color: '#374151', fontWeight: '600' }}>
+                  <span style={{ color: '#9ca3af', marginRight: '6px' }}>#{i + 1}</span>{t.skill}
+                </span>
+                <span style={{
+                  fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '10px',
+                  background: t.demand === 'High' ? '#d1fae5' : t.demand === 'Medium' ? '#fef3c7' : '#f3f4f6',
+                  color: t.demand === 'High' ? '#065f46' : t.demand === 'Medium' ? '#92400e' : '#6b7280',
+                }}>
+                  {t.demand} · {t.count} gigs
+                </span>
+              </div>
             ))}
           </div>
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <input
-              value={skillInput}
-              onChange={e => setSkillInput(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && addCustomSkill()}
-              placeholder="Add a skill (e.g. React, Figma, Python)..."
-              style={{ flex: 1, padding: '9px 14px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px' }}
-            />
-            <button onClick={addCustomSkill}
-              style={{ background: '#4f46e5', color: 'white', border: 'none', padding: '9px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '14px' }}>
-              + Add
+
+          {/* Quick actions */}
+          <div style={{ background: 'white', borderRadius: '14px', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }}>
+            <h3 style={{ margin: '0 0 14px', fontSize: '15px', color: '#111827' }}>Quick Actions</h3>
+            <button onClick={() => navigate('/freelancer-setup')} style={{ display: 'block', width: '100%', textAlign: 'left', background: '#f5f3ff', border: 'none', color: '#5b21b6', padding: '10px 14px', borderRadius: '8px', cursor: 'pointer', marginBottom: '8px', fontWeight: '600', fontSize: '13px' }}>
+              ✏️ Update Profile & Skills
+            </button>
+            <button onClick={() => navigate('/gigs')} style={{ display: 'block', width: '100%', textAlign: 'left', background: '#eff6ff', border: 'none', color: '#1d4ed8', padding: '10px 14px', borderRadius: '8px', cursor: 'pointer', marginBottom: '8px', fontWeight: '600', fontSize: '13px' }}>
+              🔍 Browse All Gigs
+            </button>
+            <button onClick={() => navigate('/analytics')} style={{ display: 'block', width: '100%', textAlign: 'left', background: '#f0fdf4', border: 'none', color: '#065f46', padding: '10px 14px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '13px' }}>
+              📊 View Analytics
             </button>
           </div>
         </div>
-
-        {/* Controls */}
-        <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
-          <span style={{ fontSize: '14px', color: '#6b7280' }}>
-            {loading ? 'Loading...' : `${sortedFiltered.length} matches found`}
-          </span>
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px' }}>
-            <select value={sortBy} onChange={e => setSortBy(e.target.value)}
-              style={{ padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '13px', background: 'white' }}>
-              <option value="score">Sort: Best Match</option>
-              <option value="budget">Sort: Highest Budget</option>
-              <option value="recent">Sort: Most Recent</option>
-            </select>
-            <input type="number" value={filterMin} onChange={e => setFilterMin(e.target.value)}
-              placeholder="Min budget $"
-              style={{ width: '120px', padding: '8px 12px', border: '1px solid #e5e7eb', borderRadius: '8px', fontSize: '13px' }} />
-          </div>
-        </div>
-
-        {/* Results */}
-        {loading ? (
-          <p style={{ textAlign: 'center', color: '#9ca3af', padding: '60px' }}>Analyzing gigs with your skills...</p>
-        ) : customSkills.length === 0 ? (
-          <div style={{ background: 'white', borderRadius: '14px', padding: '60px', textAlign: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }}>
-            <p style={{ fontSize: '40px', margin: '0 0 12px' }}>🎯</p>
-            <p style={{ color: '#6b7280', fontSize: '16px', margin: '0 0 20px' }}>Add your skills above to see personalized gig matches.</p>
-          </div>
-        ) : sortedFiltered.length === 0 ? (
-          <div style={{ background: 'white', borderRadius: '14px', padding: '60px', textAlign: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }}>
-            <p style={{ fontSize: '40px', margin: '0 0 12px' }}>😕</p>
-            <p style={{ color: '#6b7280', fontSize: '16px' }}>No matching gigs found. Try adding more skills or adjusting filters.</p>
-          </div>
-        ) : (
-          sortedFiltered.map((gig) => (
-            <div key={gig._id} style={{
-              background: 'white', borderRadius: '14px', padding: '20px 24px',
-              marginBottom: '14px', boxShadow: '0 2px 8px rgba(0,0,0,0.07)',
-              borderLeft: gig._matchScore >= 0.7 ? '4px solid #10b981' : gig._matchScore >= 0.4 ? '4px solid #f59e0b' : '4px solid #e5e7eb',
-              display: 'flex', gap: '20px', alignItems: 'flex-start',
-            }}>
-              {/* Match score circle */}
-              <div style={{ flexShrink: 0, paddingTop: '4px' }}>
-                <MatchBadge score={gig._matchScore} />
-              </div>
-
-              {/* Gig info */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
-                  <h3 style={{ margin: '0 0 6px', color: '#111827', fontSize: '17px', fontWeight: '700' }}>{gig.title}</h3>
-                  <span style={{ fontSize: '16px', fontWeight: '800', color: '#10b981' }}>
-                    ${gig.budget?.min}–${gig.budget?.max}
-                  </span>
-                </div>
-                <p style={{ margin: '0 0 10px', color: '#6b7280', fontSize: '13px' }}>
-                  {gig.category?.replace(/-/g, ' ')} · {gig.duration} · Posted {new Date(gig.createdAt).toLocaleDateString()}
-                </p>
-                <p style={{ margin: '0 0 12px', color: '#4b5563', fontSize: '14px', lineHeight: '1.5' }}>
-                  {gig.description?.substring(0, 120)}{gig.description?.length > 120 ? '...' : ''}
-                </p>
-
-                {/* Skill tags with match highlighting */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '14px' }}>
-                  {(gig.requiredSkills || []).map(skill => {
-                    const isMatch = customSkills.some(cs =>
-                      cs.toLowerCase().includes(skill.toLowerCase()) ||
-                      skill.toLowerCase().includes(cs.toLowerCase())
-                    );
-                    return (
-                      <span key={skill} style={{
-                        padding: '3px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '600',
-                        background: isMatch ? '#d1fae5' : '#f3f4f6',
-                        color: isMatch ? '#065f46' : '#6b7280',
-                        border: isMatch ? '1px solid #a7f3d0' : '1px solid transparent',
-                      }}>
-                        {isMatch ? '✓ ' : ''}{skill}
-                      </span>
-                    );
-                  })}
-                </div>
-
-                <div style={{ display: 'flex', gap: '10px' }}>
-                  <button onClick={() => navigate(`/gig/${gig._id}`)}
-                    style={{ background: '#4f46e5', color: 'white', border: 'none', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '13px' }}>
-                    View & Apply →
-                  </button>
-                  <span style={{ fontSize: '12px', color: '#9ca3af', padding: '8px 0' }}>
-                    {gig.proposals?.length || 0} proposal{gig.proposals?.length !== 1 ? 's' : ''} submitted
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))
-        )}
       </div>
     </div>
   );
