@@ -11,7 +11,7 @@ import {
 // setup freelancer profile
 const setupProfile = async (req, res) => {
   try {
-    const result = await setupFreelancerProfile(req.userId, req.body);
+    const result = await setupFreelancerProfile(req.user.id, req.body);
     res.json(result);
   } catch (error) {
     console.log(error);
@@ -22,7 +22,7 @@ const setupProfile = async (req, res) => {
 // update freelancer profile
 const updateProfile = async (req, res) => {
   try {
-    const result = await updateFreelancerProfile(req.userId, req.body);
+    const result = await updateFreelancerProfile(req.user.id, req.body);
     res.json(result);
   } catch (error) {
     console.log(error);
@@ -44,7 +44,7 @@ const getAllFreelancers = async (req, res) => {
 // add portfolio item
 const addPortfolioItem = async (req, res) => {
   try {
-    const result = await addPortfolio(req.userId, req.body);
+    const result = await addPortfolio(req.user.id, req.body);
     res.json(result);
   } catch (error) {
     console.log(error);
@@ -55,7 +55,7 @@ const addPortfolioItem = async (req, res) => {
 // remove portfolio item
 const removePortfolioItem = async (req, res) => {
   try {
-    const result = await removePortfolio(req.userId, req.params.itemId);
+    const result = await removePortfolio(req.user.id, req.params.itemId);
     res.json(result);
   } catch (error) {
     console.log(error);
@@ -66,7 +66,7 @@ const removePortfolioItem = async (req, res) => {
 // upload resume
 const uploadResumeController = async (req, res) => {
   try {
-    const result = await uploadResume(req.userId, req.file);
+    const result = await uploadResume(req.user.id, req.file);
     res.json(result);
   } catch (error) {
     console.log(error);
@@ -77,7 +77,7 @@ const uploadResumeController = async (req, res) => {
 // update availability
 const updateAvailability = async (req, res) => {
   try {
-    const result = await updateFreelancerAvailability(req.userId, req.body.slots);
+    const result = await updateFreelancerAvailability(req.user.id, req.body.slots);
     res.json(result);
   } catch (error) {
     console.log(error);
