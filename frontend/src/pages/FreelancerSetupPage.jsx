@@ -90,7 +90,7 @@ const FreelancerSetupPage = () => {
   return (
     <div style={{ minHeight: '100vh', background: '#f9fafb' }}>
       <Navbar />
-      <div style={{ maxWidth: '720px', margin: '40px auto', padding: '0 20px' }}>
+      <div style={{ maxWidth: '720px', margin: '40px auto', padding: '0 16px', boxSizing: 'border-box', width: '100%' }}>
 
         {/* Header */}
         <div style={{ marginBottom: '32px', textAlign: 'center' }}>
@@ -99,7 +99,7 @@ const FreelancerSetupPage = () => {
         </div>
 
         {/* Step indicator */}
-        <div style={{ display: 'flex', marginBottom: '32px' }}>
+        <div style={{ display: 'flex', marginBottom: '32px' , overflowX: 'auto'}}>
           {steps.map((label, i) => {
             const n = i + 1;
             const active = step === n;
@@ -142,7 +142,7 @@ const FreelancerSetupPage = () => {
                   placeholder="Tell clients about yourself, your expertise, and what makes you unique..." />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '16px', marginBottom: '16px' }}>
                 <div>
                   <label style={labelStyle}>Hourly Rate ($) <span style={{ color: '#ef4444' }}>*</span></label>
                   <input style={inputStyle} type="number" value={formData.hourlyRate}
@@ -158,7 +158,7 @@ const FreelancerSetupPage = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '12px', marginBottom: '16px' }}>
                 {['city', 'state', 'country'].map(field => (
                   <div key={field}>
                     <label style={labelStyle}>{field.charAt(0).toUpperCase() + field.slice(1)} {field === 'country' && <span style={{ color: '#ef4444' }}>*</span>}</label>

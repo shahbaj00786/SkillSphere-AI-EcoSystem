@@ -104,7 +104,6 @@ const AdminDashboard = () => {
     <div>
       <Navbar/>
     <div className="admin-dashboard">
-      <Navbar/>
       <h1>Admin Dashboard</h1>
 
       {/* Tabs */}

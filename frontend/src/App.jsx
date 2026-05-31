@@ -17,6 +17,10 @@ import PrivateRoute from './components/common/PrivateRoute.jsx'
 import DisputePage from './pages/DisputePage.jsx'
 import ProposalsPage from './pages/ProposalsPage.jsx'
 import AIMatchPage from './pages/AIMatchPage.jsx'
+import FreelancerSetupPage from './pages/FreelancerSetupPage.jsx'
+import AnalyticsPage from './pages/AnalyticsPage.jsx'
+import CreateGigPage from './pages/CreateGigPage.jsx'
+import NotificationsPage from './pages/NotificationsPage.jsx'
 
 function App() {
   return (
@@ -33,6 +37,7 @@ function App() {
       <Route path='/profile' element={<PrivateRoute><Profile /></PrivateRoute>} />
       <Route path='/freelancer/:id' element={<PrivateRoute><FreelancerProfile /></PrivateRoute>} />
       <Route path='/gigs' element={<PrivateRoute><GigMarketplace /></PrivateRoute>} />
+      <Route path='/gigs/create' element={<PrivateRoute><CreateGigPage /></PrivateRoute>} />
       <Route path='/gig/:gigId' element={<PrivateRoute><GigDetail /></PrivateRoute>} />
       <Route path='/chat' element={<PrivateRoute><ChatPage /></PrivateRoute>} />
       <Route path='/payments' element={<PrivateRoute><PaymentPage /></PrivateRoute>} />
@@ -41,7 +46,10 @@ function App() {
       <Route path='/disputes' element={<PrivateRoute><DisputePage /></PrivateRoute>} />
       <Route path='/proposals' element={<PrivateRoute><ProposalsPage /></PrivateRoute>} />
       <Route path='/ai-match' element={<PrivateRoute><AIMatchPage /></PrivateRoute>} />
-
+      <Route path='/freelancer-setup' element={<PrivateRoute><FreelancerSetupPage/></PrivateRoute>} />
+      <Route path='/analytics' element={<PrivateRoute><AnalyticsPage /></PrivateRoute>} />
+      <Route path='/notifications' element={<PrivateRoute><NotificationsPage /></PrivateRoute>} />
+      
       {/* default */}
       <Route path='/' element={<Login />} />
     </Routes>

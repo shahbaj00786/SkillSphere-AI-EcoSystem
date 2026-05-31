@@ -1,9 +1,9 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-  user: null,
+  user: JSON.parse(localStorage.getItem('user') || 'null'),
   accessToken: localStorage.getItem('accessToken') || null,
-  isAuthenticated: false,
+  isAuthenticated: !!localStorage.getItem('accessToken'),
   loading: false,
   error: null,
 };
@@ -25,6 +25,7 @@ const authSlice = createSlice({
       localStorage.setItem('refreshToken', action.payload.refreshToken);
       localStorage.setItem('userId', action.payload.user._id);
       localStorage.setItem('userRole', action.payload.user.role);
+      localStorage.setItem('user', JSON.stringify(action.payload.user)); // ← ADD
     },
     logoutSuccess: (state) => {
       state.user = null;
@@ -34,10 +35,12 @@ const authSlice = createSlice({
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('userId');
       localStorage.removeItem('userRole');
+      localStorage.removeItem('user'); // ← ADD
     },
     setUser: (state, action) => {
       state.user = action.payload;
       state.isAuthenticated = true;
+      localStorage.setItem('user', JSON.stringify(action.payload)); // ← ADD
     },
     setError: (state, action) => {
       state.error = action.payload;
@@ -46,12 +49,5 @@ const authSlice = createSlice({
   },
 });
 
-export const {
-  setLoading,
-  loginSuccess,
-  logoutSuccess,
-  setUser,
-  setError,
-} = authSlice.actions;
-
+export const { setLoading, loginSuccess, logoutSuccess, setUser, setError } = authSlice.actions;
 export default authSlice.reducer;
