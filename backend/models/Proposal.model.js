@@ -49,4 +49,12 @@ const proposalSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.model('Proposal', proposalSchema);
+let Proposal;
+
+if (mongoose.models.Proposal) {
+  Proposal = mongoose.models.Proposal;
+} else {
+  Proposal = mongoose.model('Proposal', proposalSchema);
+}
+
+export default Proposal;

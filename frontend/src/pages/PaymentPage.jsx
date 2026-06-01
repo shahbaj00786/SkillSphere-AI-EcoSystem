@@ -159,7 +159,6 @@ const PaymentPage = () => {
                       <td><span className={`tx-status ${getStatusClass(p.status)}`}>{p.status}</span></td>
                       <td>{p.paymentMethod}</td>
                       <td>{new Date(p.createdAt).toLocaleDateString()}</td>
-                      <td><button className="btn-view">View</button></td>
                     </tr>
                   ))}
                 </tbody>

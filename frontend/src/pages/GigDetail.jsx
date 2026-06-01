@@ -43,6 +43,13 @@ const GigDetail = () => {
 
   const submitProposal = async (e) => {
     e.preventDefault();
+    console.log({
+      gigId,
+      title: proposal.title,
+      description: proposal.description,
+      bidAmount: proposal.bidAmount,
+      estimatedDays: proposal.estimatedDays,
+    });
     try {
       const token = localStorage.getItem("accessToken");
       await axios.post(
@@ -138,7 +145,59 @@ const GigDetail = () => {
                 Submit a Proposal
               </button>
             ) : (
-              <form className="proposal-form" onSubmit={submitProposal}></form>
+              <form className="proposal-form" onSubmit={submitProposal}>
+                <h3>Submit Proposal</h3>
+
+                <input
+                  type="text"
+                  name="title"
+                  placeholder="Proposal Title"
+                  value={proposal.title}
+                  onChange={handleProposalChange}
+                  required
+                />
+
+                <textarea
+                  name="description"
+                  placeholder="Describe your proposal..."
+                  value={proposal.description}
+                  onChange={handleProposalChange}
+                  rows="5"
+                  required
+                />
+
+                <input
+                  type="number"
+                  name="bidAmount"
+                  placeholder="Bid Amount ($)"
+                  value={proposal.bidAmount}
+                  onChange={handleProposalChange}
+                  required
+                />
+
+                <input
+                  type="number"
+                  name="estimatedDays"
+                  placeholder="Estimated Completion Days"
+                  value={proposal.estimatedDays}
+                  onChange={handleProposalChange}
+                  required
+                />
+
+                <div className="proposal-actions">
+                  <button type="submit" className="btn-send">
+                    Send Proposal
+                  </button>
+
+                  <button
+                    type="button"
+                    className="btn-cancel"
+                    onClick={() => setShowProposalForm(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
             ))}
         </div>
       </div>
