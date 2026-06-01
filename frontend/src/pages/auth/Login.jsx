@@ -1,98 +1,78 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
-import { loginSuccess, setLoading, setError } from '../../redux/authSlice.js'
+import { loginSuccess } from '../../redux/authSlice.js'
 import authService from '../../services/authService.js'
-import { LOGO, LOGIN_IMG } from '../../constants/images.js'
 import '../../styles/auth.css'
 
 const Login = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
-
   const [formData, setFormData] = useState({ email: '', password: '' })
-  const [error, setErrorMsg] = useState('')
-  const [loading, setLoadingState] = useState(false)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value })
-  }
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value })
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setLoadingState(true)
-    setErrorMsg('')
-
+    setLoading(true)
+    setError('')
     try {
       const result = await authService.login(formData)
-
       if (result.success) {
         dispatch(loginSuccess(result))
         navigate('/dashboard')
       } else {
-        setErrorMsg(result.message)
+        setError(result.message || 'Login failed')
       }
-    } catch (error) {
-      console.log(error)
-      setErrorMsg('Something went wrong. Please try again.')
+    } catch {
+      setError('Something went wrong. Please try again.')
     }
-
-    setLoadingState(false)
+    setLoading(false)
   }
 
   return (
-    <div className='auth-container'>
-      <div className='auth-box'>
+    <div className="auth-page">
+      <div className="auth-wrapper">
 
-        <div className='auth-logo'>
-          <img src={LOGO} alt='SkillSphere Logo' />
+        <div className="auth-logo">
+          <div className="auth-logo-inner">
+            <div className="auth-logo-icon">💼</div>
+            <span className="auth-logo-text">SkillSphere</span>
+          </div>
+          <p className="auth-logo-sub">Intelligent Freelance Ecosystem</p>
         </div>
 
-        <div className='auth-image'>
-          <img src={LOGIN_IMG} alt='Login' />
-        </div>
+        <div className="auth-card">
+          <h2>Welcome back</h2>
+          <p className="subtitle">Login to your SkillSphere account</p>
 
-        <h2>Welcome Back</h2>
-        <p>Login to your SkillSphere account</p>
+          {error && <div className="auth-error">❌ {error}</div>}
 
-        {error && <p className='error'>{error}</p>}
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>Email</label>
+              <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="you@example.com" required />
+            </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className='form-group'>
-            <label>Email</label>
-            <input
-              type='email'
-              name='email'
-              placeholder='Enter your email'
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
+            <div className="form-group">
+              <label>Password</label>
+              <input type="password" name="password" value={formData.password} onChange={handleChange} placeholder="Enter your password" required />
+            </div>
+
+            <div className="auth-forgot">
+              <Link to="/forgot-password">Forgot Password?</Link>
+            </div>
+
+            <button type="submit" className="auth-btn" disabled={loading}>
+              {loading ? 'Logging in...' : 'Login →'}
+            </button>
+          </form>
+
+          <div className="auth-footer">
+            Don't have an account? <Link to="/register">Register here</Link>
           </div>
-
-          <div className='form-group'>
-            <label>Password</label>
-            <input
-              type='password'
-              name='password'
-              placeholder='Enter your password'
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div style={{ textAlign: 'right', marginBottom: '14px' }}>
-            <Link to='/forgot-password'>Forgot Password?</Link>
-          </div>
-
-          <button type='submit' disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
-          </button>
-        </form>
-
-        <div className='auth-footer'>
-          Don't have an account? <Link to='/register'>Register here</Link>
         </div>
 
       </div>

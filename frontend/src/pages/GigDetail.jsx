@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useParams } from 'react-router-dom';
-import '../styles/gigDetail.css';
-import Navbar from '../components/common/Navbar.jsx';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useParams } from "react-router-dom";
+import "../styles/gigDetail.css";
+import Navbar from "../components/common/Navbar.jsx";
 
 const GigDetail = () => {
   const { gigId } = useParams();
@@ -10,10 +10,10 @@ const GigDetail = () => {
   const [loading, setLoading] = useState(true);
   const [showProposalForm, setShowProposalForm] = useState(false);
   const [proposal, setProposal] = useState({
-    title: '',
-    description: '',
-    bidAmount: '',
-    estimatedDays: '',
+    title: "",
+    description: "",
+    bidAmount: "",
+    estimatedDays: "",
   });
 
   useEffect(() => {
@@ -23,11 +23,11 @@ const GigDetail = () => {
   const fetchGigDetails = async () => {
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/gigs/${gigId}`
+        `${import.meta.env.VITE_API_URL}/gigs/${gigId}`,
       );
       setGig(response.data.data);
     } catch (error) {
-      console.error('Error fetching gig:', error);
+      console.error("Error fetching gig:", error);
     } finally {
       setLoading(false);
     }
@@ -44,7 +44,7 @@ const GigDetail = () => {
   const submitProposal = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem("accessToken");
       await axios.post(
         `${import.meta.env.VITE_API_URL}/proposals`,
         {
@@ -53,13 +53,18 @@ const GigDetail = () => {
         },
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
-      alert('Proposal submitted successfully!');
+      alert("Proposal submitted successfully!");
       setShowProposalForm(false);
-      setProposal({ title: '', description: '', bidAmount: '', estimatedDays: '' });
+      setProposal({
+        title: "",
+        description: "",
+        bidAmount: "",
+        estimatedDays: "",
+      });
     } catch (error) {
-      alert('Error submitting proposal');
+      alert("Error submitting proposal");
       console.error(error);
     }
   };
@@ -68,7 +73,6 @@ const GigDetail = () => {
   if (!gig) return <div className="error">Gig not found</div>;
 
   return (
-    
     <div className="gig-detail">
       <div className="gig-detail-header">
         <h1>{gig.title}</h1>
@@ -102,7 +106,9 @@ const GigDetail = () => {
               <div key={idx} className="milestone">
                 <p className="milestone-name">{milestone.name}</p>
                 <p className="milestone-amount">${milestone.amount}</p>
-                <p className="milestone-date">{new Date(milestone.dueDate).toLocaleDateString()}</p>
+                <p className="milestone-date">
+                  {new Date(milestone.dueDate).toLocaleDateString()}
+                </p>
               </div>
             ))}
           </div>
@@ -123,59 +129,17 @@ const GigDetail = () => {
             <p className="client-email">{gig.clientId?.email}</p>
           </div>
 
-          {!showProposalForm ? (
-            <button
-              className="btn-submit-proposal"
-              onClick={() => setShowProposalForm(true)}
-            >
-              Submit a Proposal
-            </button>
-          ) : (
-            <form className="proposal-form" onSubmit={submitProposal}>
-              <h3>Your Proposal</h3>
-              <input
-                type="text"
-                name="title"
-                placeholder="Proposal Title"
-                value={proposal.title}
-                onChange={handleProposalChange}
-                required
-              />
-              <textarea
-                name="description"
-                placeholder="Describe your approach..."
-                value={proposal.description}
-                onChange={handleProposalChange}
-                required
-              />
-              <input
-                type="number"
-                name="bidAmount"
-                placeholder="Bid Amount"
-                value={proposal.bidAmount}
-                onChange={handleProposalChange}
-                required
-              />
-              <input
-                type="number"
-                name="estimatedDays"
-                placeholder="Estimated Days"
-                value={proposal.estimatedDays}
-                onChange={handleProposalChange}
-                required
-              />
-              <button type="submit" className="btn-submit">
-                Submit Proposal
-              </button>
+          {localStorage.getItem("userRole") === "freelancer" &&
+            (!showProposalForm ? (
               <button
-                type="button"
-                className="btn-cancel"
-                onClick={() => setShowProposalForm(false)}
+                className="btn-submit-proposal"
+                onClick={() => setShowProposalForm(true)}
               >
-                Cancel
+                Submit a Proposal
               </button>
-            </form>
-          )}
+            ) : (
+              <form className="proposal-form" onSubmit={submitProposal}></form>
+            ))}
         </div>
       </div>
     </div>
