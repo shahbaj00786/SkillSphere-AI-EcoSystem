@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
 import Navbar from '../components/common/Navbar.jsx';
-import '../styles/payments.css';
+import '../styles/payment.css';
 
 const PaymentPage = () => {
   const [payments, setPayments] = useState([]);

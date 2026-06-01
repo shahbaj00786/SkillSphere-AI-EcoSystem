@@ -34,7 +34,6 @@ const ForgotPassword = () => {
   return (
     <div className='auth-container'>
       <div className='auth-box'>
-
         <div className='auth-logo'>
           <img src={LOGO} alt='SkillSphere Logo' />
         </div>
