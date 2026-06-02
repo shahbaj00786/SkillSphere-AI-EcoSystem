@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import io from 'socket.io-client';
+import { useLocation } from 'react-router-dom';
 import '../styles/chat.css';
 import Navbar from '../components/common/Navbar.jsx';
 
 const ChatPage = () => {
+  const location = useLocation();
   const [conversations, setConversations] = useState([]);
   const [activeConversation, setActiveConversation] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -59,7 +61,24 @@ const ChatPage = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      setConversations(response.data.data);
+      const convs = response.data.data;
+      setConversations(convs);
+
+      // Auto-open conversation from URL param
+      const params = new URLSearchParams(location.search);
+      const receiverId = params.get('receiverId');
+      const receiverName = params.get('name') || 'User';
+      if (receiverId) {
+        const existing = convs.find(c => c._id === receiverId);
+        if (existing) {
+          setActiveConversation(existing);
+          fetchMessages(existing._id);
+        } else {
+          const newConv = { _id: receiverId, user: [{ name: receiverName }] };
+          setActiveConversation(newConv);
+          fetchMessages(receiverId);
+        }
+      }
     } catch (error) {
       console.error('Error fetching conversations:', error);
     } finally {
@@ -108,20 +127,44 @@ const ChatPage = () => {
     e.preventDefault();
     if (!messageInput.trim() || !activeConversation) return;
 
-    const messageData = {
-      senderId: userId,
-      receiverId: activeConversation._id,
-      content: messageInput,
-      senderName: localStorage.getItem('userName'),
-      senderAvatar: localStorage.getItem('userAvatar'),
-    };
-
-    socketRef.current.emit('send-message', messageData);
+    const content = messageInput.trim();
     setMessageInput('');
-    socketRef.current.emit('stop-typing', {
+
+    // Optimistic UI update
+    const optimisticMsg = {
+      _id: Date.now(),
       senderId: userId,
       receiverId: activeConversation._id,
-    });
+      content,
+      createdAt: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
+    scrollToBottom();
+
+    try {
+      // Save via HTTP API
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/chat/send`,
+        { receiverId: activeConversation._id, content },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // Also emit via socket for real-time delivery to receiver
+      if (socketRef.current) {
+        socketRef.current.emit('send-message', {
+          senderId: userId,
+          receiverId: activeConversation._id,
+          content,
+          senderName: localStorage.getItem('userName'),
+        });
+        socketRef.current.emit('stop-typing', {
+          senderId: userId,
+          receiverId: activeConversation._id,
+        });
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
   };
 
   return (
@@ -145,7 +188,10 @@ const ChatPage = () => {
                 }`}
                 onClick={() => selectConversation(conv)}
               >
-                <img src={conv.user[0]?.avatar || '/default-avatar.png'} alt="avatar" />
+                {conv.user[0]?.avatar
+                  ? <img src={conv.user[0].avatar} alt="avatar" onError={(e) => { e.target.style.display='none'; }} />
+                  : <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#4f46e5', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '16px', flexShrink: 0 }}>{conv.user[0]?.name?.charAt(0).toUpperCase() || '?'}</div>
+                }
                 <div className="conv-info">
                   <p className="conv-name">{conv.user[0]?.name}</p>
                   <p className="last-message">{conv.lastMessage}</p>
@@ -169,7 +215,7 @@ const ChatPage = () => {
                 <div
                   key={idx}
                   className={`message ${
-                    msg.senderId === userId ? 'sent' : 'received'
+                    (msg.senderId?._id || msg.senderId)?.toString() === userId ? 'sent' : 'received'
                   }`}
                 >
                   <div className="message-content">
