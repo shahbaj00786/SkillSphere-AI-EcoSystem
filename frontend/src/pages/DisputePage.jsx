@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useLocation } from 'react-router-dom';
 import Navbar from '../components/common/Navbar.jsx';
 
 const DisputePage = () => {
@@ -16,6 +17,17 @@ const DisputePage = () => {
   const [error, setError] = useState('');
 
   const token = localStorage.getItem('accessToken');
+
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const gigIdFromUrl = params.get('gigId');
+    if (gigIdFromUrl) {
+      setFormData((prev) => ({ ...prev, gigId: gigIdFromUrl }));
+      setShowForm(true);
+    }
+  }, [location.search]);
 
   useEffect(() => {
     fetchDisputes();
@@ -86,21 +98,7 @@ const DisputePage = () => {
             <h1 style={{ margin: 0, fontSize: '28px', color: '#111827' }}>Disputes</h1>
             <p style={{ margin: '4px 0 0', color: '#6b7280' }}>Manage and track your filed disputes</p>
           </div>
-          <button
-            onClick={() => { setShowForm(!showForm); setMessage(''); setError(''); }}
-            style={{
-              background: showForm ? '#6b7280' : '#4f46e5',
-              color: 'white',
-              border: 'none',
-              padding: '10px 20px',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontWeight: '600',
-              fontSize: '14px',
-            }}
-          >
-            {showForm ? 'Cancel' : '+ File a Dispute'}
-          </button>
+
         </div>
 
         {/* Feedback messages */}

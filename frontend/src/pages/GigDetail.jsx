@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import "../styles/gigDetail.css";
 import Navbar from "../components/common/Navbar.jsx";
 
 const GigDetail = () => {
   const { gigId } = useParams();
+  const navigate = useNavigate();
   const [gig, setGig] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showProposalForm, setShowProposalForm] = useState(false);
@@ -135,6 +136,23 @@ const GigDetail = () => {
             <p className="client-name">{gig.clientId?.name}</p>
             <p className="client-email">{gig.clientId?.email}</p>
           </div>
+
+          <button
+            className="btn-cancel"
+            style={{ marginTop: '12px', width: '100%', background: '#ef4444', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}
+            onClick={() => navigate(`/disputes?gigId=${gigId}`)}
+          >
+            ⚖️ File a Dispute
+          </button>
+
+          {localStorage.getItem("userRole") === "client" && (
+            <button
+              style={{ marginTop: '12px', width: '100%', background: '#f59e0b', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}
+              onClick={() => navigate(`/reviews?gigId=${gigId}`)}
+            >
+              ⭐ Leave a Review
+            </button>
+          )}
 
           {localStorage.getItem("userRole") === "freelancer" &&
             (!showProposalForm ? (

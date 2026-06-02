@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Dispute from '../models/Dispute.model.js';
 
 const createDispute = async (data) => {
