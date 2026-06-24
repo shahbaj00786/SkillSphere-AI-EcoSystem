@@ -1,4 +1,5 @@
 import * as reviewService from '../services/review.service.js';
+import * as notifService from '../services/notification.service.js';
 import { apiResponse } from '../utils/apiResponse.utils.js';
 
 const createReviewController = async (req, res, next) => {
@@ -14,6 +15,15 @@ const createReviewController = async (req, res, next) => {
     };
 
     const review = await reviewService.createReviewService(data);
+    // Notify freelancer they got a new review
+    try {
+      await notifService.createNotificationService({
+        userId: freelancerId,
+        type: 'review_added',
+        title: 'New Review Received ⭐',
+        message: `You received a ${rating}-star review from a client.`,
+      });
+    } catch {}
     res.status(201).json(apiResponse(201, review, 'Review created successfully'));
   } catch (error) {
     next(error);
