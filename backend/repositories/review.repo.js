@@ -14,7 +14,7 @@ const findReviewById = async (id) => {
 };
 
 const findReviewsByFreelancerId = async (freelancerId, limit = 10, skip = 0) => {
-  return await Review.find({ freelancerId })
+  return await Review.find({ freelancerId: new mongoose.Types.ObjectId(freelancerId) })
     .populate('clientId', 'name avatar')
     .limit(limit)
     .skip(skip)

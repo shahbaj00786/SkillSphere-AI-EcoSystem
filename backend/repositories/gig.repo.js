@@ -6,7 +6,10 @@ const createGig = async (data) => {
 };
 
 const findGigById = async (id) => {
-  return await Gig.findById(id).populate("clientId", "name email avatar").populate("proposals");
+  return await Gig.findById(id)
+    .populate("clientId", "name email avatar")
+    .populate("proposals")
+    .populate({ path: "selectedProposal", populate: { path: "freelancerId", select: "name email avatar _id" } });
 };
 
 const findGigsByClientId = async (clientId, limit = 10, skip = 0) => {

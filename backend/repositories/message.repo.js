@@ -38,7 +38,7 @@ const findUserConversations = async (userId) => {
       $group: {
         _id: {
           $cond: [
-            { $eq: ['$senderId', userId] },
+            { $eq: ['$senderId', objectId] },
             '$receiverId',
             '$senderId',
           ],
