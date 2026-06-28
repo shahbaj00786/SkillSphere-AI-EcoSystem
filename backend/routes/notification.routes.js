@@ -15,9 +15,9 @@ const router = express.Router();
 router.get('/', auth, getUserNotificationsController);
 router.get('/unread', auth, getUnreadNotificationsController);
 router.get('/unread-count', auth, getUnreadCountController);
-router.put('/:id/read', auth, markAsReadController);
 router.put('/read-all', auth, markAllAsReadController);
-router.delete('/:id', auth, deleteNotificationController);
+router.put('/:id/read', auth, markAsReadController);
 router.delete('/delete-all', auth, deleteAllNotificationsController);
+router.delete('/:id', auth, deleteNotificationController);
 
 export default router;
