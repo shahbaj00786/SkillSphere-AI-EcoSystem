@@ -2,9 +2,6 @@ import * as reviewRepo from '../repositories/review.repo.js';
 import * as gigRepo from '../repositories/gig.repo.js';
 
 const createReviewService = async (data) => {
-  const gig = await gigRepo.findGigById(data.gigId);
-  if (!gig) throw new Error('Gig not found');
-
   const review = await reviewRepo.createReview(data);
   return review;
 };
