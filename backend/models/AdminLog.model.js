@@ -16,14 +16,13 @@ const adminLogSchema = new mongoose.Schema(
         "gig_removed",
         "fraud_detected",
         "payment_refunded",
-        "dispute_resolved",
       ],
       required: true,
     },
     targetId: mongoose.Schema.Types.ObjectId,
     targetModel: {
       type: String,
-      enum: ["User", "Gig", "Payment", "Dispute"],
+      enum: ["User", "Gig", "Payment"],
     },
     description: String,
     status: {
