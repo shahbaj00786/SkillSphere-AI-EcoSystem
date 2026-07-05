@@ -8,7 +8,7 @@ const createProposal = async (data) => {
 const findProposalById = async (id) => {
   return await Proposal.findById(id)
     .populate('gigId')
-    .populate('freelancerId', 'name email avatar rating');
+    .populate('freelancerId', 'name email avatar');
 };
 
 const findProposalsByGigId = async (gigId) => {
