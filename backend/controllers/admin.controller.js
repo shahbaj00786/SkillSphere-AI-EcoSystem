@@ -8,6 +8,7 @@ const getAllUsersController = async (req, res, next) => {
     res.status(200).json(apiResponse(200, users, 'All users retrieved'));
   } catch (error) {
     next(error);
+    
   }
 };
 
