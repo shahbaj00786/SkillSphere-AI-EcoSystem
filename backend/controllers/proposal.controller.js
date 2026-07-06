@@ -1,6 +1,5 @@
 import * as proposalService from '../services/proposal.service.js';
 import { getGigByIdForNotif } from '../services/proposal.service.js';
-import * as notifService from '../services/notification.service.js';
 import { apiResponse } from '../utils/apiResponse.utils.js';
 
 const createProposalController = async (req, res, next) => {
