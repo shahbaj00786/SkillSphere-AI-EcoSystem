@@ -3,7 +3,7 @@ import { apiResponse } from '../utils/apiResponse.utils.js';
 
 const searchGigsController = async (req, res, next) => {
   try {
-    const { location, skills, minPrice, maxPrice, category, minRating, status, page = 1, limit = 10 } = req.query;
+    const { location, skills, minPrice, maxPrice, category, status, page = 1, limit = 10 } = req.query;
 
     const filters = {
       location,
@@ -11,7 +11,6 @@ const searchGigsController = async (req, res, next) => {
       minPrice: minPrice ? parseInt(minPrice) : null,
       maxPrice: maxPrice ? parseInt(maxPrice) : null,
       category,
-      minRating: minRating ? parseInt(minRating) : null,
       status,
     };
 
@@ -24,15 +23,14 @@ const searchGigsController = async (req, res, next) => {
 
 const searchFreelancersController = async (req, res, next) => {
   try {
-    const { location, skills, minPrice, maxPrice, category, minRating, page = 1, limit = 10 } = req.query;
+    const { location, skills, minPrice, maxPrice, category, page = 1, limit = 10 } = req.query;
 
     const filters = {
       location,
       skills: skills ? skills.split(',') : [],
       minPrice: minPrice ? parseInt(minPrice) : null,
       maxPrice: maxPrice ? parseInt(maxPrice) : null,
-      category,
-      minRating: minRating ? parseInt(minRating) : null,
+      category
     };
 
     const result = await searchService.searchFreelancers(filters, parseInt(page), parseInt(limit));
