@@ -26,10 +26,6 @@ const searchGigs = async (filters, page = 1, limit = 10) => {
     query.category = filters.category;
   }
 
-  // Rating filter
-  if (filters.minRating) {
-    query.clientRating = { $gte: filters.minRating };
-  }
 
   // Status filter
   if (filters.status) {
@@ -39,7 +35,7 @@ const searchGigs = async (filters, page = 1, limit = 10) => {
   const gigs = await Gig.find(query)
     .limit(limit)
     .skip(skip)
-    .populate('clientId', 'name avatar rating')
+    .populate('clientId', 'name avatar')
     .sort({ createdAt: -1 });
 
   const total = await Gig.countDocuments(query);
@@ -79,16 +75,10 @@ const searchFreelancers = async (filters, page = 1, limit = 10) => {
     query.category = filters.category;
   }
 
-  // Rating filter
-  if (filters.minRating) {
-    query.rating = { $gte: filters.minRating };
-  }
-
   const freelancers = await Freelancer.find(query)
     .limit(limit)
     .skip(skip)
     .populate('userId', 'name avatar email')
-    .sort({ rating: -1 });
 
   const total = await Freelancer.countDocuments(query);
 
