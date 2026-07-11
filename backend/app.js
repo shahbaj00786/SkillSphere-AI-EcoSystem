@@ -10,13 +10,10 @@ import gigRoutes from './routes/gig.routes.js';
 import proposalRoutes from './routes/proposal.routes.js';
 import searchRoutes from './routes/search.routes.js';
 import chatRoutes from './routes/chat.routes.js';
-import reviewRoutes from './routes/review.routes.js';
-import notificationRoutes from './routes/notification.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
 import adminRoutes from './routes/admin.routes.js';
-import disputeRoutes from './routes/dispute.routes.js';
 import aiRoutes from './routes/ai.routes.js';
-import analyticsRoutes from './routes/analytics.routes.js';
+
 
 const app = express();
 
@@ -35,13 +32,9 @@ app.use('/api/v1/gigs', gigRoutes);
 app.use('/api/v1/proposals', proposalRoutes);
 app.use('/api/v1/search', searchRoutes);
 app.use('/api/v1/chat', chatRoutes);
-app.use('/api/v1/reviews', reviewRoutes);
-app.use('/api/v1/notifications', notificationRoutes);
 app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1/admin', adminRoutes);
-app.use('/api/v1/disputes', disputeRoutes);
 app.use('/api/v1/ai', aiRoutes);
-app.use('/api/v1/analytics', analyticsRoutes);
 
 // health check
 app.get('/', (req, res) => {
