@@ -30,7 +30,6 @@ const AIMatchPage = () => {
   const [summary, setSummary] = useState('');
   const [trending, setTrending] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [generating, setGenerating] = useState(null); // gigId being generated
   const [generatedProposal, setGeneratedProposal] = useState(null);
   const [error, setError] = useState('');
   const [sortBy, setSortBy] = useState('score');
@@ -65,16 +64,14 @@ const AIMatchPage = () => {
   };
 
   const generateProposal = async (gigId) => {
-    setGenerating(gigId);
+
     setGeneratedProposal(null);
     try {
       const res = await axios.get(`${import.meta.env.VITE_API_URL}/ai/generate-proposal/${gigId}`, { headers });
       setGeneratedProposal({ gigId, ...res.data.data });
     } catch (err) {
       alert('Failed to generate proposal. Please try again.');
-    } finally {
-      setGenerating(null);
-    }
+    } 
   };
 
   const sorted = [...matches].sort((a, b) => {
@@ -214,7 +211,7 @@ const AIMatchPage = () => {
                         style={{ background: '#4f46e5', color: 'white', border: 'none', padding: '8px 18px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '13px' }}>
                         View & Apply →
                       </button>
-                      <button onClick={() => generateProposal(gig._id)} disabled={generating === gig._id}
+                      <button onClick={() => generateProposal(gig._id)}
                         style={{ background: generating === gig._id ? '#d1d5db' : 'white', color: '#7c3aed', border: '1px solid #7c3aed', padding: '8px 18px', borderRadius: '8px', cursor: generating === gig._id ? 'not-allowed' : 'pointer', fontWeight: '600', fontSize: '13px' }}>
                         {generating === gig._id ? '✨ Generating...' : '✨ AI Write Proposal'}
                       </button>
@@ -278,9 +275,6 @@ const AIMatchPage = () => {
             </button>
             <button onClick={() => navigate('/gigs')} style={{ display: 'block', width: '100%', textAlign: 'left', background: '#eff6ff', border: 'none', color: '#1d4ed8', padding: '10px 14px', borderRadius: '8px', cursor: 'pointer', marginBottom: '8px', fontWeight: '600', fontSize: '13px' }}>
               🔍 Browse All Gigs
-            </button>
-            <button onClick={() => navigate('/analytics')} style={{ display: 'block', width: '100%', textAlign: 'left', background: '#f0fdf4', border: 'none', color: '#065f46', padding: '10px 14px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600', fontSize: '13px' }}>
-              📊 View Analytics
             </button>
           </div>
         </div>
