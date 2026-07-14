@@ -131,27 +131,25 @@ const GigDetail = () => {
             <p className="duration">{gig.duration}</p>
           </div>
 
-          <div className="client-card">
-            <h3>Client Info</h3>
-            <p className="client-name">{gig.clientId?.name}</p>
-            <p className="client-email">{gig.clientId?.email}</p>
-          </div>
-
-          <button
-            className="btn-cancel"
-            style={{ marginTop: '12px', width: '100%', background: '#ef4444', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}
-            onClick={() => navigate(`/disputes?gigId=${gigId}`)}
-          >
-            ⚖️ File a Dispute
-          </button>
-
-          {localStorage.getItem("userRole") === "client" && (
-            <button
-              style={{ marginTop: '12px', width: '100%', background: '#f59e0b', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: '600' }}
-              onClick={() => navigate(`/reviews?gigId=${gigId}`)}
-            >
-              ⭐ Leave a Review
-            </button>
+          {/* Show Freelancer Info for client, Client Info for freelancer */}
+          {localStorage.getItem("userRole") === "client" ? (
+            <div className="client-card">
+              <h3>Freelancer Info</h3>
+              {gig.selectedProposal?.freelancerId ? (
+                <>
+                  <p className="client-name">{gig.selectedProposal.freelancerId.name}</p>
+                  <p className="client-email">{gig.selectedProposal.freelancerId.email}</p>
+                </>
+              ) : (
+                <p style={{ color: "#9ca3af", fontSize: "14px" }}>No freelancer assigned yet</p>
+              )}
+            </div>
+          ) : (
+            <div className="client-card">
+              <h3>Client Info</h3>
+              <p className="client-name">{gig.clientId?.name}</p>
+              <p className="client-email">{gig.clientId?.email}</p>
+            </div>
           )}
 
           {localStorage.getItem("userRole") === "freelancer" &&
