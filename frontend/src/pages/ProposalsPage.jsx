@@ -209,10 +209,12 @@ const ProposalsPage = () => {
                       )}
 
                       {p.status === 'accepted' && (
-                        <button className="btn-pay"
-                          onClick={() => navigate(`/payments?gigId=${selectedGig._id}&proposalId=${p._id}&freelancerId=${p.freelancerId?._id}&amount=${p.bidAmount}`)}>
-                          💳 Pay Now — ${p.bidAmount}
-                        </button>
+                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                          <button className="btn-pay"
+                            onClick={() => navigate(`/payments?gigId=${selectedGig._id}&proposalId=${p._id}&freelancerId=${p.freelancerId?._id}&amount=${p.bidAmount}`)}>
+                            💳 Pay Now — ${p.bidAmount}
+                          </button>
+                        </div>
                       )}
                     </div>
                   ))}
