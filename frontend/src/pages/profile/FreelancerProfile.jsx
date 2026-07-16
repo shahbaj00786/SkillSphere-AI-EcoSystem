@@ -6,8 +6,6 @@ import Navbar from '../../components/common/Navbar.jsx';
 const FreelancerProfile = () => {
   const { id } = useParams();
   const [freelancer, setFreelancer] = useState(null);
-  const [reviews, setReviews] = useState([]);
-  const [rating, setRating] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,14 +14,10 @@ const FreelancerProfile = () => {
 
   const fetchFreelancerData = async () => {
     try {
-      const [profileRes, reviewsRes, ratingRes] = await Promise.all([
+      const [profileRes] = await Promise.all([
         axios.get(`${import.meta.env.VITE_API_URL}/freelancers/${id}`),
-        axios.get(`${import.meta.env.VITE_API_URL}/reviews/freelancers/${id}`),
-        axios.get(`${import.meta.env.VITE_API_URL}/reviews/freelancers/${id}/rating`),
       ]);
       setFreelancer(profileRes.data.data);
-      setReviews(reviewsRes.data.data?.reviews || []);
-      setRating(ratingRes.data.data);
     } catch (error) {
       console.error('Error fetching freelancer profile:', error);
     } finally {
@@ -50,11 +44,6 @@ const FreelancerProfile = () => {
             <h2 style={{ margin: 0 }}>{freelancer.userId?.name}</h2>
             <p style={{ color: '#666', margin: '4px 0' }}>{freelancer.title}</p>
             <p style={{ color: '#4f46e5', margin: 0 }}>₹{freelancer.hourlyRate}/hr</p>
-            {rating && (
-              <p style={{ color: '#f59e0b', margin: '4px 0' }}>
-                ★ {rating.averageRating?.toFixed(1)} ({rating.totalReviews} reviews)
-              </p>
-            )}
           </div>
         </div>
 
@@ -95,24 +84,6 @@ const FreelancerProfile = () => {
             </div>
           </div>
         )}
-
-        {/* Reviews */}
-        <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-          <h3>Reviews</h3>
-          {reviews.length === 0 ? (
-            <p style={{ color: '#999' }}>No reviews yet.</p>
-          ) : (
-            reviews.map((review) => (
-              <div key={review._id} style={{ borderBottom: '1px solid #eee', paddingBottom: '16px', marginBottom: '16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <strong>{review.clientId?.name}</strong>
-                  <span style={{ color: '#f59e0b' }}>{'★'.repeat(review.rating)}</span>
-                </div>
-                <p style={{ color: '#555', marginTop: '8px' }}>{review.comment}</p>
-              </div>
-            ))
-          )}
-        </div>
 
       </div>
     </div>
