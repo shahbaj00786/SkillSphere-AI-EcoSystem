@@ -2,7 +2,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate, Link } from 'react-router-dom'
 import { logoutSuccess } from '../../redux/authSlice.js'
 import authService from '../../services/authService.js'
-import NotificationBell from './NotificationBell.jsx'
+
 
 const Navbar = () => {
   const dispatch = useDispatch()
@@ -44,14 +44,11 @@ const Navbar = () => {
         <Link to='/chat' style={linkStyle}>Messages</Link>
         <Link to='/payments' style={linkStyle}>Payments</Link>
         <Link to='/proposals' style={linkStyle}>Proposals</Link>
-        <Link to='/disputes' style={linkStyle}>Disputes</Link>
 
         {/* Freelancer only */}
         {user?.role === 'freelancer' && (
           <>
             <Link to='/ai-match' style={highlightLink}>🤖 AI Match</Link>
-            <Link to='/analytics' style={linkStyle}>Analytics</Link>
-            <Link to='/reviews' style={linkStyle}>Reviews</Link>
             <Link to='/freelancer-setup' style={linkStyle}>Setup Profile</Link>
           </>
         )}
@@ -69,9 +66,6 @@ const Navbar = () => {
 
       {/* Right — Bell + Profile + Logout */}
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
-        <div style={{ position: 'relative' }}>
-          <NotificationBell />
-        </div>
         <Link to='/profile' style={{ color: 'white', textDecoration: 'none', fontSize: '13px', fontWeight: '600', background: 'rgba(255,255,255,0.15)', padding: '5px 10px', borderRadius: '6px' }}>
           {user?.name?.split(' ')[0] || 'Profile'}
         </Link>
