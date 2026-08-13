@@ -107,3 +107,36 @@
   background-color: #fee2e2;
   color: #dc2626;
 }
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.activity-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
+}
+
+.activity-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.activity-text {
+  margin: 0 0 2px;
+  font-size: 14px;
+  color: #111827;
+  font-weight: 500;
+}
+
+.activity-time {
+  margin: 0;
+  font-size: 12px;
+  color: #9ca3af;
+}
