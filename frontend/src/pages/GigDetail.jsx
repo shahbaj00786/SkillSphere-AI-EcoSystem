@@ -1,15 +1,26 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useParams, useNavigate } from "react-router-dom";
-import "../styles/gigDetail.css";
+import { useNavigate, useParams } from "react-router-dom";
+
 import Navbar from "../components/common/Navbar.jsx";
+
+import GigHeader from "./gigDetail/GigHeader.jsx";
+import GigOverview from "./gigDetail/GigOverview.jsx";
+import GigSkills from "./gigDetail/GigSkills.jsx";
+import GigMilestones from "./gigDetail/GigMilestones.jsx";
+import GigSidebar from "./gigDetail/GigSidebar.jsx";
+import ProposalForm from "./gigDetail/ProposalForm.jsx";
+
+import "../styles/gigDetail.css";
 
 const GigDetail = () => {
   const { gigId } = useParams();
   const navigate = useNavigate();
+
   const [gig, setGig] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showProposalForm, setShowProposalForm] = useState(false);
+
   const [proposal, setProposal] = useState({
     title: "",
     description: "",
@@ -17,206 +28,263 @@ const GigDetail = () => {
     estimatedDays: "",
   });
 
+  const userRole = localStorage.getItem("userRole");
+  const token = localStorage.getItem("accessToken");
+
+  // ==============================
+  // FETCH GIG
+  // ==============================
+
   useEffect(() => {
-    fetchGigDetails();
+    if (gigId) {
+      fetchGigDetails();
+    }
   }, [gigId]);
 
   const fetchGigDetails = async () => {
     try {
+      setLoading(true);
+
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/gigs/${gigId}`,
+        `${import.meta.env.VITE_API_URL}/gigs/${gigId}`
       );
-      setGig(response.data.data);
+
+      setGig(response.data?.data || null);
     } catch (error) {
       console.error("Error fetching gig:", error);
+      setGig(null);
     } finally {
       setLoading(false);
     }
   };
 
+  // ==============================
+  // PROPOSAL INPUT
+  // ==============================
+
   const handleProposalChange = (e) => {
     const { name, value } = e.target;
+
     setProposal((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
+  // ==============================
+  // SUBMIT PROPOSAL
+  // ==============================
+
   const submitProposal = async (e) => {
     e.preventDefault();
-    console.log({
-      gigId,
-      title: proposal.title,
-      description: proposal.description,
-      bidAmount: proposal.bidAmount,
-      estimatedDays: proposal.estimatedDays,
-    });
+
+    if (!token) {
+      alert("Please login first.");
+      navigate("/login");
+      return;
+    }
+
+    if (!proposal.title.trim()) {
+      alert("Please enter proposal title.");
+      return;
+    }
+
+    if (!proposal.description.trim()) {
+      alert("Please enter your proposal.");
+      return;
+    }
+
+    if (!proposal.bidAmount || Number(proposal.bidAmount) <= 0) {
+      alert("Please enter a valid bid amount.");
+      return;
+    }
+
+    if (
+      !proposal.estimatedDays ||
+      Number(proposal.estimatedDays) <= 0
+    ) {
+      alert("Please enter estimated completion days.");
+      return;
+    }
+
     try {
-      const token = localStorage.getItem("accessToken");
       await axios.post(
         `${import.meta.env.VITE_API_URL}/proposals`,
         {
           gigId,
-          ...proposal,
+          title: proposal.title.trim(),
+          description: proposal.description.trim(),
+          bidAmount: Number(proposal.bidAmount),
+          estimatedDays: Number(proposal.estimatedDays),
         },
         {
-          headers: { Authorization: `Bearer ${token}` },
-        },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
+
       alert("Proposal submitted successfully!");
+
       setShowProposalForm(false);
+
       setProposal({
         title: "",
         description: "",
         bidAmount: "",
         estimatedDays: "",
       });
+
+      // Refresh gig data
+      fetchGigDetails();
     } catch (error) {
-      alert("Error submitting proposal");
-      console.error(error);
+      console.error("Proposal submission error:", error);
+
+      alert(
+        error.response?.data?.message ||
+          "Error submitting proposal"
+      );
     }
   };
 
-  if (loading) return <div className="loading">Loading gig details...</div>;
-  if (!gig) return <div className="error">Gig not found</div>;
+  // ==============================
+  // MESSAGE CLIENT
+  // ==============================
+
+  const messageClient = () => {
+    const clientId =
+      gig?.clientId?._id ||
+      gig?.clientId?.id;
+
+    if (!clientId) {
+      alert("Client information unavailable.");
+      return;
+    }
+
+    const clientName =
+      gig?.clientId?.name || "Client";
+
+    navigate(
+      `/chat?receiverId=${clientId}&name=${encodeURIComponent(
+        clientName
+      )}`
+    );
+  };
+
+  // ==============================
+  // LOADING
+  // ==============================
+
+  if (loading) {
+    return (
+      <div className="gig-detail-page">
+        <Navbar />
+
+        <div className="gig-detail-loading">
+          <div className="loading-spinner"></div>
+
+          <p>Loading project...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ==============================
+  // NOT FOUND
+  // ==============================
+
+  if (!gig) {
+    return (
+      <div className="gig-detail-page">
+        <Navbar />
+
+        <div className="gig-detail-error">
+          <h2>Gig not found</h2>
+
+          <button
+            type="button"
+            onClick={() => navigate("/gigs")}
+          >
+            ← Back to Gigs
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ==============================
+  // PAGE
+  // ==============================
 
   return (
-    <div className="gig-detail">
-      <div className="gig-detail-header">
-        <h1>{gig.title}</h1>
-        <div className="gig-meta">
-          <span className="category">{gig.category}</span>
-          <span className="status">{gig.status}</span>
+    <div className="gig-detail-page">
+      <Navbar />
+
+      <main className="gig-detail-wrapper">
+
+        {/* BACK BUTTON */}
+
+        <button
+          type="button"
+          className="gig-back-btn"
+          onClick={() => navigate("/gigs")}
+        >
+          ← Back to Gigs
+        </button>
+
+        {/* HEADER */}
+
+        <GigHeader gig={gig} />
+
+        {/* MAIN CONTENT */}
+
+        <div className="gig-detail-layout">
+
+          {/* LEFT SIDE */}
+
+          <section className="gig-detail-main">
+
+            <GigOverview
+              description={gig.description}
+            />
+
+            <GigSkills
+              skills={gig.requiredSkills || []}
+            />
+
+            <GigMilestones
+              milestones={gig.milestones || []}
+            />
+
+          </section>
+
+          {/* RIGHT SIDE */}
+
+          <GigSidebar
+            gig={gig}
+            userRole={userRole}
+            onMessageClient={messageClient}
+            onSubmitProposal={() =>
+              setShowProposalForm(true)
+            }
+          />
+
         </div>
-      </div>
 
-      <div className="gig-detail-content">
-        <div className="gig-main">
-          <div className="gig-description-section">
-            <h2>Description</h2>
-            <p>{gig.description}</p>
-          </div>
+      </main>
 
-          <div className="gig-skills">
-            <h3>Required Skills</h3>
-            <div className="skills-list">
-              {gig.requiredSkills?.map((skill, idx) => (
-                <span key={idx} className="skill-badge">
-                  {skill}
-                </span>
-              ))}
-            </div>
-          </div>
+      {/* PROPOSAL MODAL */}
 
-          <div className="gig-milestones">
-            <h3>Milestones</h3>
-            {gig.milestones?.map((milestone, idx) => (
-              <div key={idx} className="milestone">
-                <p className="milestone-name">{milestone.name}</p>
-                <p className="milestone-amount">${milestone.amount}</p>
-                <p className="milestone-date">
-                  {new Date(milestone.dueDate).toLocaleDateString()}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="gig-sidebar">
-          <div className="budget-card">
-            <h3>Budget</h3>
-            <p className="budget-range">
-              ${gig.budget.min} - ${gig.budget.max}
-            </p>
-            <p className="duration">{gig.duration}</p>
-          </div>
-
-          {/* Show Freelancer Info for client, Client Info for freelancer */}
-          {localStorage.getItem("userRole") === "client" ? (
-            <div className="client-card">
-              <h3>Freelancer Info</h3>
-              {gig.selectedProposal?.freelancerId ? (
-                <>
-                  <p className="client-name">{gig.selectedProposal.freelancerId.name}</p>
-                  <p className="client-email">{gig.selectedProposal.freelancerId.email}</p>
-                </>
-              ) : (
-                <p style={{ color: "#9ca3af", fontSize: "14px" }}>No freelancer assigned yet</p>
-              )}
-            </div>
-          ) : (
-            <div className="client-card">
-              <h3>Client Info</h3>
-              <p className="client-name">{gig.clientId?.name}</p>
-              <p className="client-email">{gig.clientId?.email}</p>
-            </div>
-          )}
-
-          {localStorage.getItem("userRole") === "freelancer" &&
-            (!showProposalForm ? (
-              <button
-                className="btn-submit-proposal"
-                onClick={() => setShowProposalForm(true)}
-              >
-                Submit a Proposal
-              </button>
-            ) : (
-              <form className="proposal-form" onSubmit={submitProposal}>
-                <h3>Submit Proposal</h3>
-
-                <input
-                  type="text"
-                  name="title"
-                  placeholder="Proposal Title"
-                  value={proposal.title}
-                  onChange={handleProposalChange}
-                  required
-                />
-
-                <textarea
-                  name="description"
-                  placeholder="Describe your proposal..."
-                  value={proposal.description}
-                  onChange={handleProposalChange}
-                  rows="5"
-                  required
-                />
-
-                <input
-                  type="number"
-                  name="bidAmount"
-                  placeholder="Bid Amount ($)"
-                  value={proposal.bidAmount}
-                  onChange={handleProposalChange}
-                  required
-                />
-
-                <input
-                  type="number"
-                  name="estimatedDays"
-                  placeholder="Estimated Completion Days"
-                  value={proposal.estimatedDays}
-                  onChange={handleProposalChange}
-                  required
-                />
-
-                <div className="proposal-actions">
-                  <button type="submit" className="btn-send">
-                    Send Proposal
-                  </button>
-
-                  <button
-                    type="button"
-                    className="btn-cancel"
-                    onClick={() => setShowProposalForm(false)}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            ))}
-        </div>
-      </div>
+      {showProposalForm && (
+        <ProposalForm
+          proposal={proposal}
+          onChange={handleProposalChange}
+          onSubmit={submitProposal}
+          onCancel={() =>
+            setShowProposalForm(false)
+          }
+        />
+      )}
     </div>
   );
 };

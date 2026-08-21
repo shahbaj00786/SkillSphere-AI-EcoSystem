@@ -1,202 +1,247 @@
-import { useEffect, useState } from 'react'
-import { useSelector, useDispatch } from 'react-redux'
-import { setUser } from '../../redux/authSlice.js'
-import authService from '../../services/authService.js'
-import api from '../../services/api.js'
-import Navbar from '../../components/common/Navbar.jsx'
-import { DEFAULT_AVATAR, PROFILE_IMG, PORTFOLIO_IMG, RESUME_IMG } from '../../constants/images.js'
-import '../../styles/profile.css'
+import { useEffect, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+
+import { setUser } from "../../redux/authSlice.js";
+import api from "../../services/api.js";
+
+import Navbar from "../../components/common/Navbar.jsx";
+
+import ProfileHeader from "./profileComp/ProfileHeader.jsx";
+import BasicInformation from "./profileComp/BasicInformation.jsx";
+import SkillsSection from "./profileComp/SkillsSection.jsx";
+import PortfolioSection from "./profileComp/PortfolioSection.jsx";
+import AvailabilitySection from "./profileComp/AvailabilitySection.jsx";
+
+import "../../styles/profile.css";
 
 const Profile = () => {
-  const dispatch = useDispatch()
-  const { user } = useSelector((state) => state.auth)
+  const dispatch = useDispatch();
 
-  const [freelancerData, setFreelancerData] = useState(null)
-  const [editMode, setEditMode] = useState(false)
-  const [formData, setFormData] = useState({ name: '' })
-  const [message, setMessage] = useState('')
-  const [loading, setLoading] = useState(false)
+  const { user } = useSelector((state) => state.auth);
+
+  const [freelancerData, setFreelancerData] = useState(null);
+
+  const [editMode, setEditMode] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+
+  const [message, setMessage] = useState("");
+
+  const [formData, setFormData] = useState({
+    name: "",
+    skills: [],
+    portfolioItems: [],
+    availabilitySlots: [],
+  });
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const result = await api.get('/users/me')
-        if (result.data.success) {
-          dispatch(setUser(result.data.user))
-          setFormData({ name: result.data.user.name })
-          setFreelancerData(result.data.roleData)
-        }
-      } catch (error) {
-        console.log(error)
-      }
-    }
-    fetchProfile()
-  }, [])
+    fetchProfile();
+  }, []);
 
-  const handleUpdate = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setMessage('')
+  const fetchProfile = async () => {
     try {
-      const result = await api.put('/users/me', formData)
-      if (result.data.success) {
-        dispatch(setUser(result.data.user))
-        setMessage('Profile updated successfully!')
-        setEditMode(false)
+      const response = await api.get("/users/me");
+
+      if (!response.data.success) {
+        return;
+      }
+
+      const currentUser = response.data.user;
+
+      const roleData = response.data.roleData;
+
+      dispatch(setUser(currentUser));
+
+      setFreelancerData(roleData || null);
+
+      setFormData({
+        name: currentUser?.name || "",
+
+        skills: roleData?.skills ? [...roleData.skills] : [],
+
+        portfolioItems: roleData?.portfolioItems
+          ? [...roleData.portfolioItems]
+          : [],
+
+        availabilitySlots: roleData?.availabilitySlots
+          ? [...roleData.availabilitySlots]
+          : [],
+      });
+    } catch (error) {
+      console.error("Profile fetch error:", error);
+
+      setMessage("Failed to load profile");
+    }
+  };
+  const handleEdit = () => {
+    setMessage("");
+
+    setFormData({
+      name: user?.name || "",
+
+      skills: freelancerData?.skills ? [...freelancerData.skills] : [],
+
+      portfolioItems: freelancerData?.portfolioItems
+        ? [...freelancerData.portfolioItems]
+        : [],
+
+      availabilitySlots: freelancerData?.availabilitySlots
+        ? [...freelancerData.availabilitySlots]
+        : [],
+    });
+
+    setEditMode(true);
+  };
+
+  const handleCancel = () => {
+    setFormData({
+      name: user?.name || "",
+
+      skills: freelancerData?.skills ? [...freelancerData.skills] : [],
+
+      portfolioItems: freelancerData?.portfolioItems
+        ? [...freelancerData.portfolioItems]
+        : [],
+
+      availabilitySlots: freelancerData?.availabilitySlots
+        ? [...freelancerData.availabilitySlots]
+        : [],
+    });
+
+    setEditMode(false);
+    setMessage("");
+  };
+
+  const updateField = (field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleSave = async () => {
+    setLoading(true);
+    setMessage("");
+
+    try {
+      // CLIENT PROFILE UPDATE
+      if (user?.role === "client") {
+        const response = await api.put("/users/me", {
+          name: formData.name,
+        });
+
+        if (response.data.success) {
+          dispatch(setUser(response.data.user));
+
+          setMessage("Profile updated successfully!");
+          setEditMode(false);
+        }
+
+        return;
+      }
+
+      // =========================
+      // FREELANCER PROFILE UPDATE
+      // =========================
+      if (user?.role === "freelancer") {
+        const response = await api.put("/freelancers/profile", {
+          name: formData.name,
+          skills: formData.skills,
+          portfolioItems: formData.portfolioItems,
+          availabilitySlots: formData.availabilitySlots,
+        });
+
+        if (response.data.success) {
+          if (response.data.user) {
+            dispatch(setUser(response.data.user));
+          }
+
+          if (response.data.roleData) {
+            setFreelancerData(response.data.roleData);
+          } else {
+            setFreelancerData((prev) => ({
+              ...prev,
+              skills: formData.skills,
+              portfolioItems: formData.portfolioItems,
+              availabilitySlots: formData.availabilitySlots,
+            }));
+          }
+
+          setMessage("Profile updated successfully!");
+          setEditMode(false);
+        }
       }
     } catch (error) {
-      console.log(error)
+      console.error("Profile update error:", error);
+
+      setMessage(error.response?.data?.message || "Failed to update profile");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false)
-  }
-
+  };
+  // RENDER
   return (
-    <div className='profile-container'>
+    <div className="profile-container">
       <Navbar />
-      <div className='profile-content'>
 
-        {/* profile header */}
-        <div className='profile-header'>
-          <img
-            src={user?.avatar || DEFAULT_AVATAR}
-            alt='Profile'
-          />
-          <div>
-            <h2>{user?.name}</h2>
-            <p>{user?.email}</p>
-            <p>
-              <span className={`role-badge ${user?.role}`}
-                style={{
-                  display: 'inline-block',
-                  padding: '4px 12px',
-                  borderRadius: '20px',
-                  fontSize: '12px',
-                  fontWeight: 'bold',
-                  backgroundColor: '#e0e7ff',
-                  color: '#4f46e5'
-                }}>
-                {user?.role}
-              </span>
-            </p>
-          </div>
-        </div>
+      <main className="profile-content">
+        <ProfileHeader user={user} editMode={editMode} onEdit={handleEdit} />
 
-        {/* basic info */}
-        <div className='profile-section'>
-          <h3>
-            <img src={PROFILE_IMG} alt='' style={{ width: '22px', marginRight: '8px', verticalAlign: 'middle' }} />
-            Basic Information
-          </h3>
+        {message && <div className="profile-message">{message}</div>}
 
-          {message && <p className='success'>{message}</p>}
+        <BasicInformation
+          user={user}
+          name={formData.name}
+          editMode={editMode}
+          onChange={(value) => updateField("name", value)}
+        />
 
-          {editMode ? (
-            <form className='profile-form' onSubmit={handleUpdate}>
-              <label>Full Name</label>
-              <input
-                type='text'
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              />
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <button type='submit' className='btn-small' disabled={loading}>
-                  {loading ? 'Saving...' : 'Save Changes'}
-                </button>
-                <button
-                  type='button'
-                  className='btn-small btn-danger'
-                  onClick={() => setEditMode(false)}>
-                  Cancel
-                </button>
-              </div>
-            </form>
-          ) : (
-            <>
-              <div className='info-row'>
-                <span>Full Name</span>
-                <span>{user?.name}</span>
-              </div>
-              <div className='info-row'>
-                <span>Email</span>
-                <span>{user?.email}</span>
-              </div>
-              <div className='info-row'>
-                <span>Role</span>
-                <span>{user?.role}</span>
-              </div>
-              <div className='info-row'>
-                <span>Email Verified</span>
-                <span>{user?.isVerified ? '✅ Verified' : '❌ Not Verified'}</span>
-              </div>
-              <div className='info-row'>
-                <span>Member Since</span>
-                <span>{new Date(user?.createdAt).toDateString()}</span>
-              </div>
-              <button
-                className='btn-small'
-                style={{ marginTop: '14px', width: 'auto', padding: '8px 20px' }}
-                onClick={() => setEditMode(true)}>
-                Edit Profile
-              </button>
-            </>
-          )}
-        </div>
-
-        {/* freelancer skills */}
-        {user?.role === 'freelancer' && freelancerData && (
+        {user?.role === "freelancer" && (
           <>
-            <div className='profile-section'>
-              <h3>
-                <img src={RESUME_IMG} alt='' style={{ width: '22px', marginRight: '8px', verticalAlign: 'middle' }} />
-                Skills
-              </h3>
-              <div>
-                {freelancerData.skills?.length > 0
-                  ? freelancerData.skills.map((skill, i) => (
-                    <span key={i} className='skill-tag'>
-                      {skill.name} — {skill.proficiencyLevel}
-                    </span>
-                  ))
-                  : <p style={{ color: '#999' }}>No skills added yet</p>
-                }
-              </div>
-            </div>
+            <SkillsSection
+              skills={formData.skills}
+              editMode={editMode}
+              onChange={(value) => updateField("skills", value)}
+            />
 
-            <div className='profile-section'>
-              <h3>
-                <img src={PORTFOLIO_IMG} alt='' style={{ width: '22px', marginRight: '8px', verticalAlign: 'middle' }} />
-                Portfolio
-              </h3>
-              {freelancerData.portfolioItems?.length > 0
-                ? freelancerData.portfolioItems.map((item, i) => (
-                  <div key={i} className='portfolio-item'>
-                    <h4>{item.title}</h4>
-                    <p>{item.description}</p>
-                    {item.url && <a href={item.url} target='_blank' rel='noreferrer'>View Project →</a>}
-                  </div>
-                ))
-                : <p style={{ color: '#999' }}>No portfolio items added yet</p>
-              }
-            </div>
+            <PortfolioSection
+              portfolio={formData.portfolioItems}
+              editMode={editMode}
+              onChange={(value) => updateField("portfolioItems", value)}
+            />
 
-            <div className='profile-section'>
-              <h3>Availability</h3>
-              {freelancerData.availabilitySlots?.length > 0
-                ? freelancerData.availabilitySlots.map((slot, i) => (
-                  <div key={i} className='info-row'>
-                    <span>{slot.date}</span>
-                    <span>{slot.startTime} - {slot.endTime}</span>
-                  </div>
-                ))
-                : <p style={{ color: '#999' }}>No availability slots added yet</p>
-              }
-            </div>
+            <AvailabilitySection
+              availability={formData.availabilitySlots}
+              editMode={editMode}
+              onChange={(value) => updateField("availabilitySlots", value)}
+            />
           </>
         )}
 
-      </div>
-    </div>
-  )
-}
+        {editMode && (
+          <div className="profile-edit-actions">
+            <button
+              type="button"
+              className="profile-save-btn"
+              onClick={handleSave}
+              disabled={loading}
+            >
+              {loading ? "Saving..." : "Save Changes"}
+            </button>
 
-export default Profile
+            <button
+              type="button"
+              className="profile-cancel-btn"
+              onClick={handleCancel}
+              disabled={loading}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+};
+
+export default Profile;

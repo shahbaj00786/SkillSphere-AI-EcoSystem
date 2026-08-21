@@ -4,15 +4,19 @@ import io from 'socket.io-client';
 import { useLocation } from 'react-router-dom';
 import '../styles/chat.css';
 import Navbar from '../components/common/Navbar.jsx';
+import ConversationList from './chat/ConversationList.jsx';
+import ChatWindow from './chat/ChatWindow.jsx';
 
 const ChatPage = () => {
   const location = useLocation();
+
   const [conversations, setConversations] = useState([]);
   const [activeConversation, setActiveConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+
   const socketRef = useRef(null);
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -21,244 +25,297 @@ const ChatPage = () => {
   const token = localStorage.getItem('accessToken');
 
   useEffect(() => {
-    // Initialize Socket.IO connection
-    socketRef.current = io(import.meta.env.VITE_API_URL, {
+    if (!userId || !token) return;
+
+    const socket = io(import.meta.env.VITE_API_URL, {
       auth: { token },
     });
 
-    socketRef.current.emit('join-room', userId);
+    socketRef.current = socket;
 
-    socketRef.current.on('receive-message', (message) => {
-      setMessages((prev) => [...prev, message]);
-      scrollToBottom();
+    // Join current user's room
+    socket.emit('join-room', userId);
+
+    // Receive message from another user
+    socket.on('receive-message', (message) => {
+      const senderId =
+        message.senderId?._id ||
+        message.senderId;
+
+      const receiverId =
+        message.receiverId?._id ||
+        message.receiverId;
+
+      const isCurrentConversation =
+        senderId?.toString() ===
+          activeConversation?._id?.toString() ||
+        receiverId?.toString() ===
+          activeConversation?._id?.toString();
+
+      if (isCurrentConversation) {
+        setMessages((prev) => {
+          const alreadyExists = prev.some(
+            (msg) =>
+              msg._id?.toString() ===
+              message._id?.toString()
+          );
+
+          if (alreadyExists) {
+            return prev;
+          }
+
+          return [...prev, message];
+        });
+      }
+
+      // Refresh conversation list
+      fetchConversations();
     });
 
-    socketRef.current.on('user-typing', (data) => {
+    socket.on('user-typing', (data) => {
       setIsTyping(data.isTyping);
     });
 
-    fetchConversations();
-
     return () => {
-      socketRef.current?.disconnect();
+      socket.off('receive-message');
+      socket.off('user-typing');
+      socket.disconnect();
     };
   }, [userId, token]);
+
+  useEffect(() => {
+    fetchConversations();
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({
+        behavior: 'smooth',
+      });
+    }, 50);
   };
 
   const fetchConversations = async () => {
+    if (!token) return;
+
     setLoading(true);
+
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_API_URL}/chat/conversations`,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
-      const convs = response.data.data;
+
+      const convs = response.data?.data || [];
+
       setConversations(convs);
 
-      // Auto-open conversation from URL param
-      const params = new URLSearchParams(location.search);
+      // Open conversation from URL
+      const params = new URLSearchParams(
+        location.search
+      );
+
       const receiverId = params.get('receiverId');
-      const receiverName = params.get('name') || 'User';
+      const receiverName =
+        params.get('name') || 'User';
+
       if (receiverId) {
-        const existing = convs.find(c => c._id === receiverId);
+        const existing = convs.find(
+          (conversation) =>
+            conversation._id?.toString() ===
+            receiverId.toString()
+        );
+
         if (existing) {
           setActiveConversation(existing);
-          fetchMessages(existing._id);
         } else {
-          const newConv = { _id: receiverId, user: [{ name: receiverName }] };
-          setActiveConversation(newConv);
-          fetchMessages(receiverId);
+          const newConversation = {
+            _id: receiverId,
+            user: [
+              {
+                _id: receiverId,
+                name: receiverName,
+              },
+            ],
+          };
+
+          setActiveConversation(newConversation);
         }
+
+        await fetchMessages(receiverId);
       }
     } catch (error) {
-      console.error('Error fetching conversations:', error);
+      console.error(
+        'Error fetching conversations:',
+        error.response?.data || error
+      );
     } finally {
       setLoading(false);
     }
   };
 
   const fetchMessages = async (otherUserId) => {
+    if (!otherUserId || !token) return;
+
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_API_URL}/chat/conversation/${otherUserId}`,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
-      setMessages(response.data.data);
+
+      setMessages(response.data?.data || []);
+
       scrollToBottom();
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      console.error(
+        'Error fetching messages:',
+        error.response?.data || error
+      );
+
+      setMessages([]);
     }
   };
 
-  const selectConversation = (conversation) => {
+  const selectConversation = async (conversation) => {
+    const otherUserId = conversation._id;
+
     setActiveConversation(conversation);
-    fetchMessages(conversation._id);
+    setMessages([]);
+
+    await fetchMessages(otherUserId);
   };
 
   const handleTyping = () => {
-    if (activeConversation) {
-      socketRef.current.emit('typing', {
+    if (!activeConversation || !socketRef.current) {
+      return;
+    }
+
+    socketRef.current.emit('typing', {
+      senderId: userId,
+      receiverId: activeConversation._id,
+    });
+
+    clearTimeout(typingTimeoutRef.current);
+
+    typingTimeoutRef.current = setTimeout(() => {
+      socketRef.current?.emit('stop-typing', {
         senderId: userId,
         receiverId: activeConversation._id,
       });
-
-      clearTimeout(typingTimeoutRef.current);
-      typingTimeoutRef.current = setTimeout(() => {
-        socketRef.current.emit('stop-typing', {
-          senderId: userId,
-          receiverId: activeConversation._id,
-        });
-      }, 3000);
-    }
+    }, 3000);
   };
 
   const sendMessage = async (e) => {
     e.preventDefault();
-    if (!messageInput.trim() || !activeConversation) return;
+
+    if (
+      !messageInput.trim() ||
+      !activeConversation
+    ) {
+      return;
+    }
 
     const content = messageInput.trim();
+
+    const receiverId =
+      activeConversation._id;
+
     setMessageInput('');
 
-    // Optimistic UI update
-    const optimisticMsg = {
-      _id: Date.now(),
-      senderId: userId,
-      receiverId: activeConversation._id,
-      content,
-      createdAt: new Date().toISOString(),
-    };
-    setMessages((prev) => [...prev, optimisticMsg]);
-    scrollToBottom();
-
     try {
-      // Save via HTTP API
-      await axios.post(
+      // Save message ONLY through HTTP
+      const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/chat/send`,
-        { receiverId: activeConversation._id, content },
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          receiverId,
+          content,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
-      // Also emit via socket for real-time delivery to receiver
-      if (socketRef.current) {
-        socketRef.current.emit('send-message', {
-          senderId: userId,
-          receiverId: activeConversation._id,
-          content,
-          senderName: localStorage.getItem('userName'),
-        });
-        socketRef.current.emit('stop-typing', {
-          senderId: userId,
-          receiverId: activeConversation._id,
+      const savedMessage =
+        response.data?.data;
+
+      // Add saved message to sender's UI
+      if (savedMessage) {
+        setMessages((prev) => {
+          const alreadyExists = prev.some(
+            (msg) =>
+              msg._id?.toString() ===
+              savedMessage._id?.toString()
+          );
+
+          if (alreadyExists) {
+            return prev;
+          }
+
+          return [...prev, savedMessage];
         });
       }
+
+      scrollToBottom();
+
+      // Stop typing
+      socketRef.current?.emit(
+        'stop-typing',
+        {
+          senderId: userId,
+          receiverId,
+        }
+      );
+
+      // Refresh conversations
+      fetchConversations();
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error(
+        'Error sending message:',
+        error.response?.data || error
+      );
+
+      // Restore input if sending fails
+      setMessageInput(content);
     }
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-    <Navbar />
-    <div className="chat-container">
-      
-      <div className="chat-sidebar">
-        <h2>Messages</h2>
-        {loading ? (
-          <p className="loading">Loading conversations...</p>
-        ) : conversations.length === 0 ? (
-          <p className="no-conversations">No conversations yet</p>
-        ) : (
-          <div className="conversations-list">
-            {conversations.map((conv) => (
-              <div
-                key={conv._id}
-                className={`conversation-item ${
-                  activeConversation?._id === conv._id ? 'active' : ''
-                }`}
-                onClick={() => selectConversation(conv)}
-              >
-                {conv.user[0]?.avatar
-                  ? <img src={conv.user[0].avatar} alt="avatar" onError={(e) => { e.target.style.display='none'; }} />
-                  : <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#4f46e5', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '16px', flexShrink: 0 }}>{conv.user[0]?.name?.charAt(0).toUpperCase() || '?'}</div>
-                }
-                <div className="conv-info">
-                  <p className="conv-name">{conv.user[0]?.name}</p>
-                  <p className="last-message">{conv.lastMessage}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+    <div className="chat-page">
+      <Navbar />
+
+      <div className="chat-container">
+        <ConversationList
+          conversations={conversations}
+          activeConversation={activeConversation}
+          selectConversation={selectConversation}
+          loading={loading}
+        />
+
+        <ChatWindow
+          activeConversation={activeConversation}
+          messages={messages}
+          messageInput={messageInput}
+          setMessageInput={setMessageInput}
+          handleTyping={handleTyping}
+          sendMessage={sendMessage}
+          isTyping={isTyping}
+          messagesEndRef={messagesEndRef}
+        />
       </div>
-
-      <div className="chat-main">
-        {activeConversation ? (
-          <>
-            <div className="chat-header">
-              <h3>{activeConversation.user[0]?.name}</h3>
-              <p className="chat-status">Active now</p>
-            </div>
-
-            <div className="messages-container">
-              {messages.map((msg, idx) => (
-                <div
-                  key={idx}
-                  className={`message ${
-                    (msg.senderId?._id || msg.senderId)?.toString() === userId ? 'sent' : 'received'
-                  }`}
-                >
-                  <div className="message-content">
-                    <p>{msg.content}</p>
-                    <span className="message-time">
-                      {new Date(msg.createdAt).toLocaleTimeString()}
-                    </span>
-                  </div>
-                </div>
-              ))}
-              {isTyping && (
-                <div className="message typing-indicator">
-                  <div className="typing-dot"></div>
-                  <div className="typing-dot"></div>
-                  <div className="typing-dot"></div>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-
-            <form className="message-input-form" onSubmit={sendMessage}>
-              <input
-                type="text"
-                placeholder="Type a message..."
-                value={messageInput}
-                onChange={(e) => {
-                  setMessageInput(e.target.value);
-                  handleTyping();
-                }}
-                className="message-input"
-              />
-              <button type="submit" className="send-btn">
-                Send
-              </button>
-            </form>
-          </>
-        ) : (
-          <div className="chat-placeholder">
-            <p>Select a conversation to start chatting</p>
-          </div>
-        )}
-      </div>
-    </div>
     </div>
   );
 };
